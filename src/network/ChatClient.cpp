@@ -12,8 +12,7 @@ ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     connect(socket, &QTcpSocket::connected, this, &ChatClient::handleSocketConnected);
     connect(socket, &QTcpSocket::disconnected, this, &ChatClient::handleSocketDisconnected);
     connect(socket, &QTcpSocket::readyRead, this, &ChatClient::handleSocketRead);
-    connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error),
-            this, &ChatClient::handleSocketError);
+    connect(socket, &QAbstractSocket::errorOccurred, this, &ChatClient::handleSocketError);
     connect(heartbeatTimer, &QTimer::timeout, this, &ChatClient::sendHeartbeat);
     connect(reconnectTimer, &QTimer::timeout, this, &ChatClient::tryReconnect);
 }

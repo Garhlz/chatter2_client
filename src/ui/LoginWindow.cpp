@@ -3,6 +3,8 @@
 #include <QApplication>
 #include <QStyle>
 #include <QRegularExpression>
+#include <QGuiApplication>
+#include <QScreen>
 
 LoginWindow::LoginWindow(ChatClient *client, QWidget *parent)
     : QMainWindow(parent), chatClient(client) {
@@ -53,14 +55,15 @@ void LoginWindow::setupUi() {
         "#statusLabel { color: red; }"
     );
 
-    setGeometry(
-        QStyle::alignedRect(
-            Qt::LeftToRight,
-            Qt::AlignCenter,
-            size(),
-            QApplication::desktop()->availableGeometry()
-        )
-    );
+    // Qt 6 居中窗口
+    QScreen *screen = QGuiApplication::primaryScreen();
+    if (screen) {
+        QRect screenGeometry = screen->availableGeometry();
+        QSize windowSize = size();
+        int x = (screenGeometry.width() - windowSize.width()) / 2;
+        int y = (screenGeometry.height() - windowSize.height()) / 2;
+        move(x, y);
+    }
 }
 
 void LoginWindow::connectSignals() {

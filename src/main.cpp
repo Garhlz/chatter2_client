@@ -25,25 +25,25 @@ int main(int argc, char *argv[]) {
 
     // 创建客户端和窗口
     ChatClient *chatClient = new ChatClient(&app);
-    LoginWindow *loginWindow = new LoginWindow(chatClient, &app);
-    RegisterWindow *registerWindow = new RegisterWindow(chatClient, &app);
+    LoginWindow *loginWindow = new LoginWindow(chatClient);
+    RegisterWindow *registerWindow = new RegisterWindow(chatClient);
     ChatWindow *chatWindow = nullptr;
 
     // 连接信号
-    QObject::connect(loginWindow, &LoginWindow::showRegisterWindow, [=]() {
+    QObject::connect(loginWindow, &LoginWindow::showRegisterWindow, [loginWindow, registerWindow]() {
         loginWindow->hide();
         registerWindow->show();
     });
-    QObject::connect(registerWindow, &RegisterWindow::showLoginWindow, [=]() {
+    QObject::connect(registerWindow, &RegisterWindow::showLoginWindow, [registerWindow, loginWindow]() {
         registerWindow->hide();
         loginWindow->show();
     });
-    QObject::connect(loginWindow, &LoginWindow::loginSuccessful, [=](const QString &nickname) {
+    QObject::connect(loginWindow, &LoginWindow::loginSuccessful, [loginWindow, &chatWindow, chatClient](const QString &nickname) {
         loginWindow->hide();
-        chatWindow = new ChatWindow(chatClient, nickname, &app);
+        chatWindow = new ChatWindow(chatClient, nickname);
         chatWindow->show();
     });
-    QObject::connect(chatClient, &ChatClient::disconnected, [=]() {
+    QObject::connect(chatClient, &ChatClient::disconnected, [&chatWindow, loginWindow]() {
         if (chatWindow) {
             chatWindow->hide();
             delete chatWindow;

@@ -2,10 +2,12 @@
 #include <QDateTime>
 #include <QMessageBox>
 #include <QScrollBar>
-#include <QApplication>
-#include <QStyle>
+#include <QStatusBar>
+#include <QGuiApplication>
+#include <QScreen>
 #include <QtConcurrent/QtConcurrent>
 #include <QFile>
+#include <QFileDialog>
 
 ChatWindow::ChatWindow(ChatClient *client, const QString &nickname, QWidget *parent)
     : QMainWindow(parent), chatClient(client), nickname(nickname) {
@@ -106,14 +108,15 @@ void ChatWindow::setupUi() {
         "QLabel { color: #333; }"
     );
 
-    setGeometry(
-        QStyle::alignedRect(
-            Qt::LeftToRight,
-            Qt::AlignCenter,
-            size(),
-            QApplication::desktop()->availableGeometry()
-        )
-    );
+    // Qt 6 居中窗口
+    QScreen *screen = QGuiApplication::primaryScreen();
+    if (screen) {
+        QRect screenGeometry = screen->availableGeometry();
+        QSize windowSize = size();
+        int x = (screenGeometry.width() - windowSize.width()) / 2;
+        int y = (screenGeometry.height() - windowSize.height()) / 2;
+        move(x, y);
+    }
 }
 
 void ChatWindow::connectSignals() {
@@ -224,7 +227,7 @@ void ChatWindow::handlePrivateMessageReceived(const QString &sender, const QStri
 }
 
 void ChatWindow::handleGroupMessageReceived(const QString &sender, const QString &groupName,
-                                          const QString &content, qint64 messageId) {
+                                           const QString &content, qint64 messageId) {
     QString message = QString("[%1] %2").arg(groupName).arg(content);
     appendMessage(groupChatDisplay, sender, message, messageId);
     saveHistory(sender, message, "GROUP_CHAT");
@@ -234,7 +237,7 @@ void ChatWindow::handleGroupMessageReceived(const QString &sender, const QString
 void ChatWindow::handleFileReceived(const QString &sender, const QByteArray &fileContent, qint64 messageId) {
     QString saveFilePath = QFileDialog::getSaveFileName(this, "保存文件");
     if (saveFilePath.isEmpty()) return;
-    QtConcurrent::run([=]() {
+    QFuture<void> future = QtConcurrent::run([=]() {
         QFile file(saveFilePath);
         if (file.open(QIODevice::WriteOnly)) {
             file.write(fileContent);
@@ -245,6 +248,7 @@ void ChatWindow::handleFileReceived(const QString &sender, const QByteArray &fil
             });
         }
     });
+    Q_UNUSED(future); // 显式忽略 QFuture，避免 nodiscard 警告
 }
 
 void ChatWindow::handleOnlineUsersUpdated(const QJsonArray &users, int count) {
