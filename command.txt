@@ -9,3 +9,4 @@ cmake .. -G "MinGW Makefiles" `
 
 mingw32-make
 
+.\chatter_client.exe

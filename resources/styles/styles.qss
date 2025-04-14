@@ -1,0 +1,239 @@
+/* 全局样式 */
+QWidget {
+    font-family: "Microsoft YaHei", "SimHei", sans-serif;
+    font-size: 13px;
+}
+
+/* 登录和注册窗口共享样式 */
+#LoginWindow, #RegisterWindow {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                              stop:0 #f0f2f5, stop:1 #e6e9ef);
+    border: none;
+    border-radius: 10px;
+    min-width: 450px;
+}
+
+/* 窗口阴影 */
+#LoginWindow[polish="true"], #RegisterWindow[polish="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                              stop:0 #f0f2f5, stop:1 #e6e9ef);
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* 输入框 */
+#LoginWindow QLineEdit, #RegisterWindow QLineEdit {
+    padding: 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+    margin: 8px 0;
+}
+
+#LoginWindow QLineEdit:focus, #RegisterWindow QLineEdit:focus {
+    border-color: #4CAF50;
+    outline: none;
+}
+
+/* 主要按钮（登录、注册） */
+#LoginWindow QPushButton#loginButton,
+#LoginWindow QPushButton#registerButton:not(:flat),
+#RegisterWindow QPushButton#registerButton,
+#RegisterWindow QPushButton#backToLoginButton:not(:flat) {
+    padding: 12px 30px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 6px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                              stop:0 #4CAF50, stop:1 #45a049);
+    color: white;
+    border: none;
+    min-width: 120px;
+}
+
+#LoginWindow QPushButton#loginButton:hover,
+#LoginWindow QPushButton#registerButton:not(:flat):hover,
+#RegisterWindow QPushButton#registerButton:hover,
+#RegisterWindow QPushButton#backToLoginButton:not(:flat):hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                              stop:0 #45a049, stop:1 #3d8b40);
+}
+
+/* 链接样式按钮（注册新账号、返回登录） */
+#LoginWindow QPushButton#registerButton:flat,
+#RegisterWindow QPushButton#backToLoginButton:flat {
+    background: none;
+    color: #4CAF50;
+    font-size: 13px;
+    padding: 5px;
+    border: none;
+    text-align: left;
+}
+
+#LoginWindow QPushButton#registerButton:flat:hover,
+#RegisterWindow QPushButton#backToLoginButton:flat:hover {
+    color: #45a049;
+    background: none;
+}
+
+/* 标签 */
+#LoginWindow QLabel, #RegisterWindow QLabel {
+    color: #495057;
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+#LoginWindow QLabel#statusLabel, #RegisterWindow QLabel#statusLabel {
+    color: #dc3545;
+    font-size: 13px;
+    padding: 5px;
+}
+
+/* 聊天窗口样式 */
+#ChatWindow {
+    background-color: #ffffff;
+}
+
+#ChatWindow QTabWidget::pane {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: white;
+}
+
+#ChatWindow QTabBar::tab {
+    background-color: #f8f9fa;
+    padding: 10px 20px;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    margin-right: 3px;
+    font-size: 13px;
+    color: #495057;
+}
+
+#ChatWindow QTabBar::tab:selected {
+    background-color: white;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+#ChatWindow QTabBar::tab:hover {
+    background-color: #e9ecef;
+}
+
+#ChatWindow QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+#ChatWindow QWidget#publicChatContainer,
+#ChatWindow QWidget#privateChatContainer,
+#ChatWindow QWidget#groupChatContainer {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+#ChatWindow QLineEdit {
+    padding: 10px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+}
+
+#ChatWindow QLineEdit:focus {
+    border-color: #4CAF50;
+}
+
+#ChatWindow QPushButton {
+    padding: 10px 20px;
+    border-radius: 6px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                              stop:0 #4CAF50, stop:1 #45a049);
+    color: white;
+    font-weight: bold;
+    border: none;
+}
+
+#ChatWindow QPushButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                              stop:0 #45a049, stop:1 #3d8b40);
+}
+
+/* 列表样式 */
+QListWidget {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background-color: white;
+    padding: 5px;
+}
+
+QListWidget::item {
+    padding: 8px;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+QListWidget::item:selected {
+    background-color: #4CAF50;
+    color: white;
+}
+
+QListWidget::item:hover {
+    background-color: #e9ecef;
+}
+
+/* 状态栏样式 */
+QStatusBar {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 5px;
+}
+
+QStatusBar QLabel {
+    color: #6c757d;
+    padding: 3px 10px;
+}
+
+QStatusBar QPushButton {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 4px;
+    padding: 5px 15px;
+    font-weight: bold;
+}
+
+QStatusBar QPushButton:hover {
+    background-color: #c82333;
+}
+
+/* 滚动条样式 */
+QScrollBar:vertical {
+    border: none;
+    background-color: #f8f9fa;
+    width: 12px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #adb5bd;
+    border-radius: 6px;
+    min-height: 30px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #6c757d;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background-color: #f8f9fa;
+}
