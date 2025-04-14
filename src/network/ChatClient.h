@@ -38,6 +38,7 @@ signals:
     void errorOccurred(const QString &error);
     void onlineUsersUpdated(const QJsonArray &users, int count);
     void groupListReceived(const QJsonArray &groups);
+    void historyMessagesReceived(const QJsonArray &messages);
 
 private slots:
     void handleSocketConnected();
@@ -50,7 +51,6 @@ private slots:
 private:
     void sendJsonMessage(const QJsonObject &message);
     void processMessage(const QJsonObject &message);
-    void logMessage(const QString &prefix, const QByteArray &data);
 
     QTcpSocket *socket;
     QTimer *heartbeatTimer;

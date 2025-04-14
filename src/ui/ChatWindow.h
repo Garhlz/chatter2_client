@@ -2,7 +2,6 @@
 #define CHATWINDOW_H
 
 #include <QMainWindow>
-#include <QTextEdit>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QListWidget>
@@ -12,8 +11,10 @@
 #include <QTabWidget>
 #include <QFileDialog>
 #include <QComboBox>
+#include <QScrollArea>
 #include <QSet>
 #include "network/ChatClient.h"
+#include "MessageBubble.h"
 
 class ChatWindow : public QMainWindow {
     Q_OBJECT
@@ -29,6 +30,7 @@ public slots:
     void handleFileReceived(const QString &sender, const QByteArray &fileContent, qint64 messageId);
     void handleOnlineUsersUpdated(const QJsonArray &users, int count);
     void handleGroupListReceived(const QJsonArray &groups);
+    void handleHistoryMessagesReceived(const QJsonArray &messages);
 
 private slots:
     void sendMessage();
@@ -42,10 +44,9 @@ private slots:
 private:
     void setupUi();
     void connectSignals();
-    void appendMessage(QTextEdit *textEdit, const QString &sender, const QString &content, qint64 messageId);
+    void appendMessageBubble(QWidget *container, const QString &sender, const QString &content,
+                            const QString &timestamp, const QString &avatar = QString());
     void updateOnlineUsersList(const QJsonArray &users);
-    void loadHistory();
-    void saveHistory(const QString &sender, const QString &content, const QString &type);
 
     ChatClient *chatClient;
     QString nickname;
@@ -55,13 +56,16 @@ private:
 
     // 公共聊天页
     QWidget *publicChatTab;
-    QTextEdit *publicChatDisplay;
+    QScrollArea *publicChatDisplay;
+    QWidget *publicChatContainer;
+    QVBoxLayout *publicChatLayout;
     QLineEdit *publicMessageInput;
     QPushButton *publicSendButton;
 
     // 私聊页
     QWidget *privateChatTab;
-    QTextEdit *privateChatDisplay;
+    QScrollArea *privateChatDisplay;
+    QWidget *privateChatContainer;
     QLineEdit *privateMessageInput;
     QPushButton *privateSendButton;
     QListWidget *onlineUsersList;
@@ -69,7 +73,9 @@ private:
 
     // 群聊页
     QWidget *groupChatTab;
-    QTextEdit *groupChatDisplay;
+    QScrollArea *groupChatDisplay;
+    QWidget *groupChatContainer;
+    QVBoxLayout *groupChatLayout;
     QComboBox *groupCombo;
     QLineEdit *groupMessageInput;
     QPushButton *groupSendButton;
@@ -80,6 +86,9 @@ private:
     // 状态栏
     QLabel *statusLabel;
     QLabel *onlineCountLabel;
+
+    // 初始化标志
+    bool isInitialized;
 };
 
 #endif // CHATWINDOW_H

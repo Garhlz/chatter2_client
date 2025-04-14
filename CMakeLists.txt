@@ -17,6 +17,8 @@ set(PROJECT_SOURCES
     src/ui/RegisterWindow.h
     src/ui/ChatWindow.cpp
     src/ui/ChatWindow.h
+    src/ui/MessageBubble.cpp
+    src/ui/MessageBubble.h
     src/network/ChatClient.cpp
     src/network/ChatClient.h
     src/utils/MessageHandler.cpp

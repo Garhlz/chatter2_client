@@ -1,9 +1,11 @@
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QMessageBox>
 #include "network/ChatClient.h"
 #include "ui/LoginWindow.h"
 #include "ui/RegisterWindow.h"
 #include "ui/ChatWindow.h"
+#include <QDebug>
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -27,7 +29,6 @@ int main(int argc, char *argv[]) {
     ChatClient *chatClient = new ChatClient(&app);
     LoginWindow *loginWindow = new LoginWindow(chatClient);
     RegisterWindow *registerWindow = new RegisterWindow(chatClient);
-    ChatWindow *chatWindow = nullptr;
 
     // 连接信号
     QObject::connect(loginWindow, &LoginWindow::showRegisterWindow, [loginWindow, registerWindow]() {
@@ -38,21 +39,31 @@ int main(int argc, char *argv[]) {
         registerWindow->hide();
         loginWindow->show();
     });
-    QObject::connect(loginWindow, &LoginWindow::loginSuccessful, [loginWindow, &chatWindow, chatClient](const QString &nickname) {
-        loginWindow->hide();
-        chatWindow = new ChatWindow(chatClient, nickname);
-        chatWindow->show();
-    });
-    QObject::connect(chatClient, &ChatClient::disconnected, [&chatWindow, loginWindow]() {
-        if (chatWindow) {
-            chatWindow->hide();
-            delete chatWindow;
-            chatWindow = nullptr;
+    QObject::connect(loginWindow, &LoginWindow::loginSuccessful, [loginWindow, chatClient](const QString &nickname) {
+        try {
+            qDebug() << "Main: Handling loginSuccessful for nickname =" << nickname;
+            loginWindow->hide();
+            ChatWindow *newChatWindow = new ChatWindow(chatClient, nickname);
+            newChatWindow->setAttribute(Qt::WA_DeleteOnClose);
+            qDebug() << "Main: Showing ChatWindow";
+            newChatWindow->show();
+        } catch (const std::exception &e) {
+            qDebug() << "Main: Exception in loginSuccessful:" << e.what();
+            QMessageBox::critical(nullptr, "错误", QString("创建聊天窗口失败: %1").arg(e.what()));
+            loginWindow->show();
+        } catch (...) {
+            qDebug() << "Main: Unknown exception in loginSuccessful";
+            QMessageBox::critical(nullptr, "错误", "创建聊天窗口时发生未知错误");
+            loginWindow->show();
         }
+    });
+    QObject::connect(chatClient, &ChatClient::disconnected, [loginWindow]() {
+        qDebug() << "Main: ChatClient disconnected";
         loginWindow->show();
     });
 
     // 连接服务器
+    qDebug() << "Main: Connecting to server at" << host << ":" << port;
     chatClient->connectToServer(host, port);
     loginWindow->show();
 
