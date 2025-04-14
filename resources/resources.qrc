@@ -3,5 +3,6 @@
     <qresource prefix="/">
         <file>styles/styles.qss</file>
         <file>styles/messagebubble.qss</file>
+        <file>styles/chatwindow.qss</file>
     </qresource>
 </RCC>

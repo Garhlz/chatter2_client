@@ -26,8 +26,6 @@ set(PROJECT_SOURCES
     src/utils/JsonConverter.cpp
     src/utils/JsonConverter.h
     resources/resources.qrc
-    resources/styles/styles.qss
-    resources/styles/messagebubble.qss
 )
 
 add_executable(chatter_client WIN32 ${PROJECT_SOURCES})
@@ -45,5 +43,7 @@ target_include_directories(chatter_client PRIVATE
 
 # 确保 GUI 应用程序设置
 set_target_properties(chatter_client PROPERTIES
-    WIN32_EXECUTABLE TRUE
+    WIN32_EXECUTABLE false
 )
+# 关闭, 因为需要debug输出
+message(STATUS "Sources: ${PROJECT_SOURCES}")

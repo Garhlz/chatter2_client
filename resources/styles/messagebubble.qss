@@ -1,62 +1,72 @@
 /* MessageBubble组件样式 */
 
+/* 整体容器 */
+QWidget#MessageBubble {
+    margin: 8px 10px;
+    max-width: 80%;
+}
+
 /* 头像样式 */
-#MessageBubble QLabel#avatarLabel {
+QLabel#avatarLabel {
     min-width: 40px;
     min-height: 40px;
     max-width: 40px;
     max-height: 40px;
     border-radius: 20px;
-    background-color: #f0f0f0;
+    background-color: #e0e0e0;
+    border: 1px solid #d0d0d0;
 }
 
 /* 昵称样式 */
-#MessageBubble QLabel#nicknameLabel {
-    border: none !important;
+QLabel#nicknameLabel {
     font-weight: bold;
-    color: #444;
-    padding: 2px 10px;
+    color: #333333;
+    padding: 4px 12px;
     margin: 0;
     background-color: transparent;
 }
 
-#MessageBubble QLabel#nicknameLabel[own="true"] {
+QLabel#nicknameLabel[own="true"] {
     text-align: right;
 }
 
 /* 时间戳样式 */
-#MessageBubble QLabel#timeLabel {
-    border: none !important;
-    color: #999;
-    font-size: 10px;
-    padding: 2px 10px;
+QLabel#timeLabel {
+    color: #888888;
+    font-size: 11px;
+    padding: 4px 12px;
     margin: 0;
     background-color: transparent;
 }
 
-#MessageBubble QLabel#timeLabel[own="true"] {
+QLabel#timeLabel[own="true"] {
     text-align: right;
 }
 
 /* 消息内容样式 */
-#MessageBubble QLabel#contentLabel {
-    padding: 10px 15px;
-    margin: 4px 10px;
-    border-radius: 12px;
+QLabel#contentLabel {
+    padding: 12px 16px;
+    margin: 6px 12px;
+    border-radius: 16px;
     white-space: pre-wrap;
-    line-height: 1.5;
+    line-height: 1.4;
+    max-width: 100%;
 }
 
-#MessageBubble QLabel#contentLabel[own="true"] {
-    background-color: #E3F2FD !important;
-    color: #222;
-    border: 1px solid #90CAF9 !important;
+QLabel#contentLabel[own="true"] {
+    background-color: #2196F3;
+    color: white;
+    border: none;
     margin-left: auto;
 }
 
-#MessageBubble QLabel#contentLabel[own="false"] {
-    background-color: #F5F5F5 !important;
-    color: #222;
-    border: 1px solid #E0E0E0 !important;
+QLabel#contentLabel[own="false"] {
+    background-color: #ECEFF1;
+    color: #222222;
+    border: none;
     margin-right: auto;
+}
+
+QLabel#contentLabel:hover {
+    opacity: 0.9;
 }

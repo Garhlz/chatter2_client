@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <QScreen>
 #include <QScrollBar>
+#include <QSplitter>
 #include <QStatusBar>
 #include <QtConcurrent/QtConcurrent>
 
@@ -50,55 +51,42 @@ void ChatWindow::setupUi() {
   try {
     qDebug() << "ChatWindow: Creating central widget";
     centralWidget = new QWidget(this);
-    if (!centralWidget)
-      throw std::runtime_error("Failed to create centralWidget");
     setCentralWidget(centralWidget);
 
     qDebug() << "ChatWindow: Creating main layout";
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-    if (!mainLayout)
-      throw std::runtime_error("Failed to create mainLayout");
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setSpacing(10);
 
     qDebug() << "ChatWindow: Creating tab widget";
     chatTabs = new QTabWidget(this);
-    if (!chatTabs)
-      throw std::runtime_error("Failed to create chatTabs");
+    chatTabs->setObjectName("chatTabs");
     mainLayout->addWidget(chatTabs);
 
     // 公共聊天页
     qDebug() << "ChatWindow: Setting up public chat tab";
     publicChatTab = new QWidget();
-    if (!publicChatTab)
-      throw std::runtime_error("Failed to create publicChatTab");
+    publicChatTab->setObjectName("publicChatTab");
     QVBoxLayout *publicLayout = new QVBoxLayout(publicChatTab);
-    if (!publicLayout)
-      throw std::runtime_error("Failed to create publicLayout");
+    publicLayout->setContentsMargins(5, 5, 5, 5);
 
     publicChatDisplay = new QScrollArea();
-    if (!publicChatDisplay)
-      throw std::runtime_error("Failed to create publicChatDisplay");
+    publicChatDisplay->setObjectName("publicChatDisplay");
     publicChatContainer = new QWidget();
-    if (!publicChatContainer)
-      throw std::runtime_error("Failed to create publicChatContainer");
+    publicChatContainer->setObjectName("publicChatContainer");
     publicChatLayout = new QVBoxLayout(publicChatContainer);
-    if (!publicChatLayout)
-      throw std::runtime_error("Failed to create publicChatLayout");
+    publicChatLayout->setAlignment(Qt::AlignTop);
     publicChatLayout->addStretch();
     publicChatDisplay->setWidget(publicChatContainer);
     publicChatDisplay->setWidgetResizable(true);
-    // 设置对象名称以应用样式
-    publicChatContainer->setObjectName("publicChatContainer");
 
     qDebug() << "ChatWindow: Creating public input layout";
     QHBoxLayout *publicInputLayout = new QHBoxLayout();
-    if (!publicInputLayout)
-      throw std::runtime_error("Failed to create publicInputLayout");
     publicMessageInput = new QLineEdit();
-    if (!publicMessageInput)
-      throw std::runtime_error("Failed to create publicMessageInput");
-    publicSendButton = new QPushButton("发送");
-    if (!publicSendButton)
-      throw std::runtime_error("Failed to create publicSendButton");
+    publicMessageInput->setObjectName("publicMessageInput");
+    publicSendButton = new QPushButton();
+    publicSendButton->setObjectName("publicSendButton");
+    // publicSendButton->setIcon(QIcon(":/icons/send.png")); // 需添加图标资源
     publicInputLayout->addWidget(publicMessageInput);
     publicInputLayout->addWidget(publicSendButton);
     publicLayout->addWidget(publicChatDisplay);
@@ -107,114 +95,81 @@ void ChatWindow::setupUi() {
     // 私聊页
     qDebug() << "ChatWindow: Setting up private chat tab";
     privateChatTab = new QWidget();
-    if (!privateChatTab)
-      throw std::runtime_error("Failed to create privateChatTab");
+    privateChatTab->setObjectName("privateChatTab");
     QHBoxLayout *privateLayout = new QHBoxLayout(privateChatTab);
-    if (!privateLayout)
-      throw std::runtime_error("Failed to create privateLayout");
-    QVBoxLayout *privateChatLayout = new QVBoxLayout();
-    if (!privateChatLayout)
-      throw std::runtime_error("Failed to create privateChatLayout");
+    privateLayout->setContentsMargins(5, 5, 5, 5);
 
-    qDebug() << "ChatWindow: Creating private chat display";
+    QSplitter *privateSplitter = new QSplitter(Qt::Horizontal);
+    privateSplitter->setObjectName("privateSplitter");
+
+    QWidget *chatWidget = new QWidget();
+    QVBoxLayout *privateChatLayout = new QVBoxLayout(chatWidget);
     privateChatDisplay = new QScrollArea();
-    if (!privateChatDisplay)
-      throw std::runtime_error("Failed to create privateChatDisplay");
+    privateChatDisplay->setObjectName("privateChatDisplay");
     privateChatContainer = new QWidget();
-    if (!privateChatContainer)
-      throw std::runtime_error("Failed to create privateChatContainer");
+    privateChatContainer->setObjectName("privateChatContainer");
     QVBoxLayout *privateMessagesLayout = new QVBoxLayout(privateChatContainer);
-    if (!privateMessagesLayout)
-      throw std::runtime_error("Failed to create privateMessagesLayout");
+    privateMessagesLayout->setAlignment(Qt::AlignTop);
     privateMessagesLayout->addStretch();
-    qDebug()
-        << "ChatWindow: Setting privateChatContainer to privateChatDisplay";
     privateChatDisplay->setWidget(privateChatContainer);
     privateChatDisplay->setWidgetResizable(true);
-    // 设置对象名称以应用样式
-    privateChatContainer->setObjectName("privateChatContainer");
 
-    qDebug() << "ChatWindow: Creating private input layout";
     QHBoxLayout *privateInputLayout = new QHBoxLayout();
-    if (!privateInputLayout)
-      throw std::runtime_error("Failed to create privateInputLayout");
-    qDebug() << "ChatWindow: Creating private message input";
     privateMessageInput = new QLineEdit();
-    if (!privateMessageInput)
-      throw std::runtime_error("Failed to create privateMessageInput");
-    qDebug() << "ChatWindow: Creating private send button";
-    privateSendButton = new QPushButton("发送");
-    if (!privateSendButton)
-      throw std::runtime_error("Failed to create privateSendButton");
-    qDebug() << "ChatWindow: Creating send file button";
-    sendFileButton = new QPushButton("发送文件");
-    if (!sendFileButton)
-      throw std::runtime_error("Failed to create sendFileButton");
-    qDebug() << "ChatWindow: Adding private message input to layout";
+    privateMessageInput->setObjectName("privateMessageInput");
+    privateSendButton = new QPushButton();
+    privateSendButton->setObjectName("privateSendButton");
+    // privateSendButton->setIcon(QIcon(":/icons/send.png"));
+    sendFileButton = new QPushButton();
+    sendFileButton->setObjectName("sendFileButton");
+    // sendFileButton->setIcon(QIcon(":/icons/file.png")); // 需添加图标资源
     privateInputLayout->addWidget(privateMessageInput);
-    qDebug() << "ChatWindow: Adding private send button to layout";
     privateInputLayout->addWidget(privateSendButton);
-    qDebug() << "ChatWindow: Adding send file button to layout";
     privateInputLayout->addWidget(sendFileButton);
-    qDebug() << "ChatWindow: Adding private chat display to chat layout";
     privateChatLayout->addWidget(privateChatDisplay);
-    qDebug() << "ChatWindow: Adding private input layout to chat layout";
     privateChatLayout->addLayout(privateInputLayout);
 
-    qDebug() << "ChatWindow: Creating users layout";
-    QVBoxLayout *usersLayout = new QVBoxLayout();
-    if (!usersLayout)
-      throw std::runtime_error("Failed to create usersLayout");
+    QWidget *usersWidget = new QWidget();
+    QVBoxLayout *usersLayout = new QVBoxLayout(usersWidget);
     QLabel *usersLabel = new QLabel("在线用户");
-    if (!usersLabel)
-      throw std::runtime_error("Failed to create usersLabel");
+    usersLabel->setObjectName("usersLabel");
     onlineUsersList = new QListWidget();
-    if (!onlineUsersList)
-      throw std::runtime_error("Failed to create onlineUsersList");
+    onlineUsersList->setObjectName("onlineUsersList");
     usersLayout->addWidget(usersLabel);
     usersLayout->addWidget(onlineUsersList);
-    privateLayout->addLayout(privateChatLayout);
-    privateLayout->addLayout(usersLayout);
+
+    privateSplitter->addWidget(chatWidget);
+    privateSplitter->addWidget(usersWidget);
+    privateSplitter->setSizes({400, 200}); // 初始比例
+    privateLayout->addWidget(privateSplitter);
 
     // 群聊页
     qDebug() << "ChatWindow: Setting up group chat tab";
     groupChatTab = new QWidget();
-    if (!groupChatTab)
-      throw std::runtime_error("Failed to create groupChatTab");
+    groupChatTab->setObjectName("groupChatTab");
     QVBoxLayout *groupLayout = new QVBoxLayout(groupChatTab);
-    if (!groupLayout)
-      throw std::runtime_error("Failed to create groupLayout");
+    groupLayout->setContentsMargins(5, 5, 5, 5);
 
     groupChatDisplay = new QScrollArea();
-    if (!groupChatDisplay)
-      throw std::runtime_error("Failed to create groupChatDisplay");
+    groupChatDisplay->setObjectName("groupChatDisplay");
     groupChatContainer = new QWidget();
-    if (!groupChatContainer)
-      throw std::runtime_error("Failed to create groupChatContainer");
+    groupChatContainer->setObjectName("groupChatContainer");
     groupChatLayout = new QVBoxLayout(groupChatContainer);
-    if (!groupChatLayout)
-      throw std::runtime_error("Failed to create groupChatLayout");
+    groupChatLayout->setAlignment(Qt::AlignTop);
     groupChatLayout->addStretch();
     groupChatDisplay->setWidget(groupChatContainer);
     groupChatDisplay->setWidgetResizable(true);
-    // 设置对象名称以应用样式
-    groupChatContainer->setObjectName("groupChatContainer");
 
-    qDebug() << "ChatWindow: Creating group input layout";
     QHBoxLayout *groupInputLayout = new QHBoxLayout();
-    if (!groupInputLayout)
-      throw std::runtime_error("Failed to create groupInputLayout");
     groupCombo = new QComboBox();
-    if (!groupCombo)
-      throw std::runtime_error("Failed to create groupCombo");
+    groupCombo->setObjectName("groupCombo");
     groupCombo->setPlaceholderText("选择群组");
     groupMessageInput = new QLineEdit();
-    if (!groupMessageInput)
-      throw std::runtime_error("Failed to create groupMessageInput");
+    groupMessageInput->setObjectName("groupMessageInput");
     groupMessageInput->setPlaceholderText("消息内容");
-    groupSendButton = new QPushButton("发送");
-    if (!groupSendButton)
-      throw std::runtime_error("Failed to create groupSendButton");
+    groupSendButton = new QPushButton();
+    groupSendButton->setObjectName("groupSendButton");
+    // groupSendButton->setIcon(QIcon(":/icons/send.png"));
     groupInputLayout->addWidget(groupCombo);
     groupInputLayout->addWidget(groupMessageInput);
     groupInputLayout->addWidget(groupSendButton);
@@ -229,24 +184,20 @@ void ChatWindow::setupUi() {
     // 状态栏
     qDebug() << "ChatWindow: Setting up status bar";
     QStatusBar *statusBar = new QStatusBar(this);
-    if (!statusBar)
-      throw std::runtime_error("Failed to create statusBar");
+    statusBar->setObjectName("statusBar");
     statusLabel = new QLabel("已连接");
-    if (!statusLabel)
-      throw std::runtime_error("Failed to create statusLabel");
+    statusLabel->setObjectName("statusLabel");
     onlineCountLabel = new QLabel("在线人数: 0");
-    if (!onlineCountLabel)
-      throw std::runtime_error("Failed to create onlineCountLabel");
+    onlineCountLabel->setObjectName("onlineCountLabel");
     QPushButton *logoutButton = new QPushButton("登出");
-    if (!logoutButton)
-      throw std::runtime_error("Failed to create logoutButton");
+    logoutButton->setObjectName("logoutButton");
     statusBar->addWidget(statusLabel);
     statusBar->addWidget(onlineCountLabel);
     statusBar->addPermanentWidget(logoutButton);
     setStatusBar(statusBar);
 
     qDebug() << "ChatWindow: Setting window size and style";
-    resize(800, 600);
+    resize(900, 700);
     setObjectName("ChatWindow");
 
     qDebug() << "ChatWindow: Centering window";
@@ -257,8 +208,6 @@ void ChatWindow::setupUi() {
       int x = (screenGeometry.width() - windowSize.width()) / 2;
       int y = (screenGeometry.height() - windowSize.height()) / 2;
       move(x, y);
-    } else {
-      qDebug() << "ChatWindow: No primary screen available";
     }
 
     qDebug() << "ChatWindow: setupUi completed";
@@ -522,6 +471,9 @@ void ChatWindow::handleGroupListReceived(const QJsonArray &groups) {
     for (const auto &g : groups) {
       groupCombo->addItem(g.toString());
     }
+    if (!groups.isEmpty()) {
+      groupCombo->setCurrentIndex(0);
+    }
   } catch (const QException &e) {
     qDebug() << "ChatWindow: Qt exception in handleGroupListReceived:"
              << e.what();
@@ -674,10 +626,15 @@ void ChatWindow::appendMessageBubble(QWidget *container, const QString &sender,
     QScrollArea *scrollArea =
         qobject_cast<QScrollArea *>(container->parentWidget()->parentWidget());
     if (scrollArea) {
-      QTimer::singleShot(0, scrollArea, [=]() {
-        scrollArea->verticalScrollBar()->setValue(
-            scrollArea->verticalScrollBar()->maximum());
-      });
+      bool isAtBottom = scrollArea->verticalScrollBar()->value() >=
+                        scrollArea->verticalScrollBar()->maximum() - 20;
+      scrollArea->viewport()->update();
+      if (isAtBottom) {
+        QTimer::singleShot(10, scrollArea, [=]() {
+          scrollArea->verticalScrollBar()->setValue(
+              scrollArea->verticalScrollBar()->maximum());
+        });
+      }
     }
   } catch (const QException &e) {
     qDebug() << "ChatWindow: Qt exception in appendMessageBubble:" << e.what();

@@ -72,40 +72,31 @@ int main(int argc, char *argv[]) {
   // 加载 QSS 样式
   QString combinedStyle;
   bool styleLoaded = true;
+  QStringList styleFiles = {":/styles/styles.qss", ":/styles/messagebubble.qss",
+                            ":/styles/chatwindow.qss"};
 
-  // 加载 styles.qss
-  QFile styleFile(":/styles/styles.qss");
-  if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
-    QString styleContent = QString::fromUtf8(styleFile.readAll());
-    if (!styleContent.isEmpty()) {
-      combinedStyle += styleContent;
-      qDebug() << "Loaded styles.qss successfully";
+  for (const QString &filePath : styleFiles) {
+    QFile styleFile(filePath);
+    if (!styleFile.exists()) {
+      qDebug() << "Error: Style file not found:" << filePath;
+      styleLoaded = false;
+      continue;
+    }
+    if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
+      QString styleContent = QString::fromUtf8(styleFile.readAll());
+      if (!styleContent.isEmpty()) {
+        combinedStyle += styleContent + "\n";
+        qDebug() << "Loaded" << filePath << "successfully";
+      } else {
+        qDebug() << "Warning:" << filePath << "is empty";
+        styleLoaded = false;
+      }
+      styleFile.close();
     } else {
-      qDebug() << "Warning: styles.qss is empty";
+      qDebug() << "Failed to open" << filePath << ":"
+               << styleFile.errorString();
       styleLoaded = false;
     }
-    styleFile.close();
-  } else {
-    qDebug() << "Failed to load styles.qss: file not found or inaccessible";
-    styleLoaded = false;
-  }
-
-  // 加载 messagebubble.qss
-  styleFile.setFileName(":/styles/messagebubble.qss");
-  if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
-    QString styleContent = QString::fromUtf8(styleFile.readAll());
-    if (!styleContent.isEmpty()) {
-      combinedStyle += "\n" + styleContent; // 添加换行符避免语法冲突
-      qDebug() << "Loaded messagebubble.qss successfully";
-    } else {
-      qDebug() << "Warning: messagebubble.qss is empty";
-      styleLoaded = false;
-    }
-    styleFile.close();
-  } else {
-    qDebug()
-        << "Failed to load messagebubble.qss: file not found or inaccessible";
-    styleLoaded = false;
   }
 
   // 应用样式
@@ -113,11 +104,9 @@ int main(int argc, char *argv[]) {
     app.setStyleSheet(combinedStyle);
     qDebug() << "Applied QSS styles successfully";
   } else {
-    qDebug()
-        << "No QSS styles applied: all style files failed to load or are empty";
-    // 可选：提示用户
-    // QMessageBox::warning(nullptr, "样式警告",
-    // "无法加载样式文件，界面可能显示异常");
+    qDebug() << "Error: No QSS styles applied";
+    QMessageBox::warning(nullptr, "样式警告",
+                         "无法加载样式文件，界面可能显示异常");
   }
 
   // 如果样式加载部分失败，记录警告
