@@ -69,49 +69,15 @@ int main(int argc, char *argv[]) {
     loginWindow->show();
   });
 
-  // 加载 QSS 样式
-  QString combinedStyle;
-  bool styleLoaded = true;
-  QStringList styleFiles = {":/styles/styles.qss", ":/styles/messagebubble.qss",
-                            ":/styles/chatwindow.qss"};
+  // 加载样式表
+  QFile styleFile(":/styles/styles.qss");
 
-  for (const QString &filePath : styleFiles) {
-    QFile styleFile(filePath);
-    if (!styleFile.exists()) {
-      qDebug() << "Error: Style file not found:" << filePath;
-      styleLoaded = false;
-      continue;
-    }
-    if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
-      QString styleContent = QString::fromUtf8(styleFile.readAll());
-      if (!styleContent.isEmpty()) {
-        combinedStyle += styleContent + "\n";
-        qDebug() << "Loaded" << filePath << "successfully";
-      } else {
-        qDebug() << "Warning:" << filePath << "is empty";
-        styleLoaded = false;
-      }
-      styleFile.close();
-    } else {
-      qDebug() << "Failed to open" << filePath << ":"
-               << styleFile.errorString();
-      styleLoaded = false;
-    }
-  }
-
-  // 应用样式
-  if (!combinedStyle.isEmpty()) {
-    app.setStyleSheet(combinedStyle);
-    qDebug() << "Applied QSS styles successfully";
+  if (styleFile.open(QFile::ReadOnly)) {
+    QString styleSheet = styleFile.readAll();
+    app.setStyleSheet(styleSheet);
+    qDebug() << "Successfully loaded styles.qss";
   } else {
-    qDebug() << "Error: No QSS styles applied";
-    QMessageBox::warning(nullptr, "样式警告",
-                         "无法加载样式文件，界面可能显示异常");
-  }
-
-  // 如果样式加载部分失败，记录警告
-  if (!styleLoaded) {
-    qDebug() << "Warning: One or more QSS files failed to load properly";
+    qWarning() << "Could not open styles.qss: " << styleFile.errorString();
   }
 
   // 连接服务器

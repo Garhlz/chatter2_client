@@ -5,13 +5,15 @@
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QMouseEvent>
 #include <QRegularExpression>
 #include <QScreen>
 #include <QStyle>
 
-
 LoginWindow::LoginWindow(ChatClient *client, QWidget *parent)
-    : QMainWindow(parent), chatClient(client) {
+    : QMainWindow(parent), chatClient(client), isDragging(false) {
+  setAttribute(Qt::WA_TranslucentBackground);
+  setWindowFlags(Qt::FramelessWindowHint); // 无边框窗口
   setupUi();
   connectSignals();
   setWindowTitle("聊天客户端 - 登录");
@@ -21,41 +23,42 @@ LoginWindow::~LoginWindow() {}
 
 void LoginWindow::setupUi() {
   centralWidget = new QWidget(this);
+  centralWidget->setObjectName("centralWidget");
   setCentralWidget(centralWidget);
 
   QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-  mainLayout->setSpacing(15);
-  mainLayout->setContentsMargins(30, 30, 30, 30);
+  mainLayout->setSpacing(10);
+  mainLayout->setContentsMargins(20, 20, 20, 20);
 
   QFormLayout *formLayout = new QFormLayout();
   formLayout->setSpacing(10);
   formLayout->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-  QLabel *usernameLabel = new QLabel("用户名:", this);
-  usernameEdit = new QLineEdit(this);
+  QLabel *usernameLabel = new QLabel("用户名:");
+  usernameEdit = new QLineEdit();
   usernameEdit->setPlaceholderText("请输入用户名");
   usernameEdit->setObjectName("usernameEdit");
   formLayout->addRow(usernameLabel, usernameEdit);
 
-  QLabel *passwordLabel = new QLabel("密码:", this);
-  passwordEdit = new QLineEdit(this);
+  QLabel *passwordLabel = new QLabel("密码:");
+  passwordEdit = new QLineEdit();
   passwordEdit->setPlaceholderText("请输入密码");
   passwordEdit->setEchoMode(QLineEdit::Password);
   passwordEdit->setObjectName("passwordEdit");
   formLayout->addRow(passwordLabel, passwordEdit);
 
   QHBoxLayout *buttonLayout = new QHBoxLayout();
-  buttonLayout->setSpacing(20);
-  loginButton = new QPushButton("登录", this);
+  buttonLayout->setSpacing(10);
+  loginButton = new QPushButton("登录");
   loginButton->setObjectName("loginButton");
-  registerButton = new QPushButton("注册新账号", this);
+  registerButton = new QPushButton("注册");
   registerButton->setObjectName("registerButton");
-  registerButton->setFlat(true);
+  buttonLayout->addStretch();
   buttonLayout->addWidget(loginButton);
   buttonLayout->addWidget(registerButton);
   buttonLayout->addStretch();
 
-  statusLabel = new QLabel(this);
+  statusLabel = new QLabel();
   statusLabel->setObjectName("statusLabel");
   statusLabel->setAlignment(Qt::AlignCenter);
 
@@ -67,26 +70,34 @@ void LoginWindow::setupUi() {
   setFixedSize(450, 350);
   setObjectName("LoginWindow");
 
-  // 阴影效果
-  setProperty("polish", true);
-  setGraphicsEffect(new QGraphicsDropShadowEffect(this));
-  auto *effect = graphicsEffect();
-  if (effect) {
-    auto *shadow = qobject_cast<QGraphicsDropShadowEffect *>(effect);
-    if (shadow) {
-      shadow->setBlurRadius(12);
-      shadow->setColor(QColor(0, 0, 0, 38));
-      shadow->setOffset(0, 4);
-    }
-  }
+#ifndef LOW_PERFORMANCE
+  auto *effect = new QGraphicsDropShadowEffect(this);
+  effect->setBlurRadius(10);
+  effect->setColor(QColor(0, 0, 0, 20));
+  effect->setOffset(0, 2);
+  centralWidget->setGraphicsEffect(effect);
+#endif
+}
 
-  QScreen *screen = QGuiApplication::primaryScreen();
-  if (screen) {
-    QRect screenGeometry = screen->availableGeometry();
-    QSize windowSize = size();
-    int x = (screenGeometry.width() - windowSize.width()) / 2;
-    int y = (screenGeometry.height() - windowSize.height()) / 2;
-    move(x, y);
+void LoginWindow::mousePressEvent(QMouseEvent *event) {
+  if (event->button() == Qt::LeftButton) {
+    isDragging = true;
+    dragPosition = event->globalPos() - frameGeometry().topLeft();
+    event->accept();
+  }
+}
+
+void LoginWindow::mouseMoveEvent(QMouseEvent *event) {
+  if (isDragging && (event->buttons() & Qt::LeftButton)) {
+    move(event->globalPos() - dragPosition);
+    event->accept();
+  }
+}
+
+void LoginWindow::mouseReleaseEvent(QMouseEvent *event) {
+  if (event->button() == Qt::LeftButton) {
+    isDragging = false;
+    event->accept();
   }
 }
 

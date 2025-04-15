@@ -72,11 +72,15 @@ void ChatWindow::setupUi() {
 
     publicChatDisplay = new QScrollArea();
     publicChatDisplay->setObjectName("publicChatDisplay");
+    publicChatDisplay->setMinimumHeight(300);
+    // publicChatDisplay->setMinimumWidth(500);
+    publicChatDisplay->setMinimumWidth(500);
     publicChatContainer = new QWidget();
     publicChatContainer->setObjectName("publicChatContainer");
     publicChatLayout = new QVBoxLayout(publicChatContainer);
     publicChatLayout->setAlignment(Qt::AlignTop);
-    publicChatLayout->addStretch();
+    publicChatLayout->setContentsMargins(0, 0, 0, 0);
+    // publicChatLayout->addStretch();
     publicChatDisplay->setWidget(publicChatContainer);
     publicChatDisplay->setWidgetResizable(true);
 
@@ -84,9 +88,9 @@ void ChatWindow::setupUi() {
     QHBoxLayout *publicInputLayout = new QHBoxLayout();
     publicMessageInput = new QLineEdit();
     publicMessageInput->setObjectName("publicMessageInput");
-    publicSendButton = new QPushButton();
+    publicMessageInput->setPlaceholderText("输入消息...");
+    publicSendButton = new QPushButton("发送");
     publicSendButton->setObjectName("publicSendButton");
-    // publicSendButton->setIcon(QIcon(":/icons/send.png")); // 需添加图标资源
     publicInputLayout->addWidget(publicMessageInput);
     publicInputLayout->addWidget(publicSendButton);
     publicLayout->addWidget(publicChatDisplay);
@@ -96,20 +100,25 @@ void ChatWindow::setupUi() {
     qDebug() << "ChatWindow: Setting up private chat tab";
     privateChatTab = new QWidget();
     privateChatTab->setObjectName("privateChatTab");
-    QHBoxLayout *privateLayout = new QHBoxLayout(privateChatTab);
-    privateLayout->setContentsMargins(5, 5, 5, 5);
+    QVBoxLayout *privateTabLayout = new QVBoxLayout(privateChatTab);
+    privateTabLayout->setContentsMargins(5, 5, 5, 5);
+    privateTabLayout->setSpacing(0);
 
     QSplitter *privateSplitter = new QSplitter(Qt::Horizontal);
     privateSplitter->setObjectName("privateSplitter");
 
     QWidget *chatWidget = new QWidget();
     QVBoxLayout *privateChatLayout = new QVBoxLayout(chatWidget);
+    privateChatLayout->setContentsMargins(0, 0, 0, 0);
     privateChatDisplay = new QScrollArea();
     privateChatDisplay->setObjectName("privateChatDisplay");
+    privateChatDisplay->setMinimumHeight(300);
+    privateChatDisplay->setMinimumWidth(500);
     privateChatContainer = new QWidget();
     privateChatContainer->setObjectName("privateChatContainer");
     QVBoxLayout *privateMessagesLayout = new QVBoxLayout(privateChatContainer);
     privateMessagesLayout->setAlignment(Qt::AlignTop);
+    privateMessagesLayout->setContentsMargins(0, 0, 0, 0);
     privateMessagesLayout->addStretch();
     privateChatDisplay->setWidget(privateChatContainer);
     privateChatDisplay->setWidgetResizable(true);
@@ -117,12 +126,11 @@ void ChatWindow::setupUi() {
     QHBoxLayout *privateInputLayout = new QHBoxLayout();
     privateMessageInput = new QLineEdit();
     privateMessageInput->setObjectName("privateMessageInput");
-    privateSendButton = new QPushButton();
+    privateMessageInput->setPlaceholderText("输入私聊消息...");
+    privateSendButton = new QPushButton("发送");
     privateSendButton->setObjectName("privateSendButton");
-    // privateSendButton->setIcon(QIcon(":/icons/send.png"));
-    sendFileButton = new QPushButton();
+    sendFileButton = new QPushButton("文件");
     sendFileButton->setObjectName("sendFileButton");
-    // sendFileButton->setIcon(QIcon(":/icons/file.png")); // 需添加图标资源
     privateInputLayout->addWidget(privateMessageInput);
     privateInputLayout->addWidget(privateSendButton);
     privateInputLayout->addWidget(sendFileButton);
@@ -131,17 +139,19 @@ void ChatWindow::setupUi() {
 
     QWidget *usersWidget = new QWidget();
     QVBoxLayout *usersLayout = new QVBoxLayout(usersWidget);
+    usersLayout->setContentsMargins(0, 0, 0, 0);
     QLabel *usersLabel = new QLabel("在线用户");
     usersLabel->setObjectName("usersLabel");
     onlineUsersList = new QListWidget();
     onlineUsersList->setObjectName("onlineUsersList");
+    onlineUsersList->setMaximumWidth(150);
     usersLayout->addWidget(usersLabel);
     usersLayout->addWidget(onlineUsersList);
 
     privateSplitter->addWidget(chatWidget);
     privateSplitter->addWidget(usersWidget);
-    privateSplitter->setSizes({400, 200}); // 初始比例
-    privateLayout->addWidget(privateSplitter);
+    privateSplitter->setSizes({700, 150}); // 优先聊天区
+    privateTabLayout->addWidget(privateSplitter);
 
     // 群聊页
     qDebug() << "ChatWindow: Setting up group chat tab";
@@ -152,10 +162,13 @@ void ChatWindow::setupUi() {
 
     groupChatDisplay = new QScrollArea();
     groupChatDisplay->setObjectName("groupChatDisplay");
+    groupChatDisplay->setMinimumHeight(300);
+    groupChatDisplay->setMinimumWidth(500);
     groupChatContainer = new QWidget();
     groupChatContainer->setObjectName("groupChatContainer");
     groupChatLayout = new QVBoxLayout(groupChatContainer);
     groupChatLayout->setAlignment(Qt::AlignTop);
+    groupChatLayout->setContentsMargins(0, 0, 0, 0);
     groupChatLayout->addStretch();
     groupChatDisplay->setWidget(groupChatContainer);
     groupChatDisplay->setWidgetResizable(true);
@@ -166,10 +179,9 @@ void ChatWindow::setupUi() {
     groupCombo->setPlaceholderText("选择群组");
     groupMessageInput = new QLineEdit();
     groupMessageInput->setObjectName("groupMessageInput");
-    groupMessageInput->setPlaceholderText("消息内容");
-    groupSendButton = new QPushButton();
+    groupMessageInput->setPlaceholderText("输入群聊消息...");
+    groupSendButton = new QPushButton("发送");
     groupSendButton->setObjectName("groupSendButton");
-    // groupSendButton->setIcon(QIcon(":/icons/send.png"));
     groupInputLayout->addWidget(groupCombo);
     groupInputLayout->addWidget(groupMessageInput);
     groupInputLayout->addWidget(groupSendButton);
@@ -211,6 +223,7 @@ void ChatWindow::setupUi() {
     }
 
     qDebug() << "ChatWindow: setupUi completed";
+
   } catch (const QException &e) {
     qDebug() << "ChatWindow: Qt exception in setupUi:" << e.what();
     throw;

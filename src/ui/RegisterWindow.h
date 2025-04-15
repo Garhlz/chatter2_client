@@ -24,6 +24,11 @@ private slots:
   void handleError(const QString &error);
   void showLogin();
 
+protected:
+  void mousePressEvent(QMouseEvent *event) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
+  void mouseReleaseEvent(QMouseEvent *event) override;
+
 private:
   void setupUi();
   void connectSignals();
@@ -36,6 +41,8 @@ private:
   QPushButton *registerButton;
   QPushButton *backToLoginButton;
   QLabel *statusLabel;
+  bool isDragging;
+  QPoint dragPosition;
 };
 
 #endif // REGISTERWINDOW_H

@@ -1,19 +1,4 @@
-- Windows 11
-- Qt 6.5.3 (MingW 11.2.0 64-bit)
-- CMake ≥3.16
-- MinGW 11.2.0
-这是我的cppqt构建的聊天应用的客户端. 目前我实现了聊天大厅功能, 还没有实现私聊,群聊,文件上传等.
-我遇到了一个问题, 就是qt无法成功渲染我的qss文件:
-Loaded ":/styles/styles.qss" successfully
-
-Loaded ":/styles/messagebubble.qss" successfully
-
-Loaded ":/styles/chatwindow.qss" successfully
-
-Could not parse application stylesheet
-
-Applied QSS styles successfully
-
-Main: Connecting to server at "localhost" : 9999
-我查阅了qt6的文档,发现qt6似乎不支持嵌套的样式表选择器语法,能否帮我重构qss文件以及涉及的cpp文件,使之符合这种简单的语法:QPushButton#okButton
-顺便,帮我美化一下样式和布局设计好吗
+你修改的非常好了!但是还有几个问题:
+1. 登录和注册界面的主组件有一个圆角,而外面又包了一层方角,中间留出了黑色的空隙,很奇怪
+2. 登录和注册界面的右侧按钮没有边框. 登录界面的"注册"按钮只需要注册两个字即可
+3. chatwindow主界面的右侧莫名其妙地多出了大片空白,挤占了聊天滚动区的位置, 导致消息气泡无法正常显示. 请你在刚才的基础上继续修改,给出修改之后的完整代码
