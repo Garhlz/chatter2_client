@@ -1,3 +1,8 @@
- Sent message to client /0:0:0:0:0:0:0:1: {"type":"SYSTEM","username":null,"password":null,"nickname":null,"receiver":null,"content":"online_users","token":null,"status":null,"timestamp":"2025-04-15T12:00:44.3025686","errorMessage":null,"messageId":null,
- 
- "onlineUsers":[{"userId":1,"username":"1","password":"$2a$10$kapg7xU.HtYPZu1Hc2RKN.BQjbrQ/THNriHGG0Cm2QcsD3ty6dC5S","nickname":"user1","avatarUrl":"https://secure.gravatar.com/avatar/default?s=200&d=mp","status":0,"lastHeartbeat":[2025,4,15,11,53,17,390000000],"createdAt":[2025,4,14,18,5,12,538000000],"lastLoginAt":[2025,4,15,11,46,41,489000000]},{"userId":2,"username":"2","password":"$2a$10$V4QVo/Lb8aHwIWuwCIg1OetqMfc./xbBTTHMtI.5EAA9oIerJVLpO","nickname":"user2","avatarUrl":"https://secure.gravatar.com/avatar/default?s=200&d=mp","status":0,"lastHeartbeat":[2025,4,15,11,52,58,96000000],"createdAt":[2025,4,14,18,6,10,724000000],"lastLoginAt":[2025,4,15,11,50,12,295000000]}],"messages":null}
+目前服务端没有什么问题了, 但是客户端有问题
+不同会话的消息要分开处理, 然后右侧需要显示所有用户和在线用户, 选择的逻辑也可以改动
+
+未来计划完成功能:
+- 好友系统
+- 个人主页
+- 个人空间系统
+- 群聊管理系统

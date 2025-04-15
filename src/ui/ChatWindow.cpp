@@ -239,7 +239,8 @@ void ChatWindow::handleGroupListReceived(const QJsonArray &groups) {
   groupChatTab->updateGroupList(groups);
 }
 
-void ChatWindow::handleHistoryMessagesReceived(const QJsonArray &messages) {
+void ChatWindow::handleHistoryMessagesReceived(
+    const QJsonArray &messages) { // 似乎所有类型都处理了
   if (!isInitialized) {
     qDebug()
         << "ChatWindow: Ignoring historyMessagesReceived before initialization";

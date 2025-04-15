@@ -53,3 +53,4 @@ set_target_properties(chatter_client PROPERTIES
 )
 # 关闭, 因为需要debug输出
 message(STATUS "Sources: ${PROJECT_SOURCES}")
+

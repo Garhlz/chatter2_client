@@ -78,7 +78,7 @@ void PrivateChatTab::connectSignals() {
           &PrivateChatTab::handleUserSelected);
 }
 
-void PrivateChatTab::sendPrivateMessage() {
+void PrivateChatTab::sendPrivateMessage() { // 这里处理选中的user
   QString content = privateMessageInput->text().trimmed();
   if (content.isEmpty())
     return;
@@ -127,7 +127,7 @@ void PrivateChatTab::handleUserSelected() {
   QListWidgetItem *item = onlineUsersList->currentItem();
   if (item) {
     selectedUser = item->data(Qt::UserRole).toString();
-    qDebug() << "PrivateChatTab: Selected user:" << selectedUser;
+    qDebug() << "PrivateChatTab: Selected user id:" << selectedUser;
   }
 }
 

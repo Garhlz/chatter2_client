@@ -13,7 +13,6 @@
 #include <QSet>
 #include <QTabWidget>
 
-
 class ChatWindow : public QMainWindow {
   Q_OBJECT
 
