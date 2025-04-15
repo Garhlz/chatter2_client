@@ -1,0 +1,24 @@
+{
+    "C_Cpp.intelliSenseEngine": "disabled", // 禁用 MS 的
+    "clangd.path": "clangd", // 如果不是全局命令，写完整路径
+    "clangd.arguments": [
+      "--compile-commands-dir=build",
+      "--header-insertion=never"
+    ],
+    "CMake Tools: Build Directory": "${workspaceFolder}/build",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "xaver.clang-format",
+    "[cpp]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "clang-format.executable": "clang-format", // 如果不在 PATH，可以填完整路径
+    "C_Cpp.clang_format_style": "file", // 使用项目里的 .clang-format
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": true,
+    "[cpp]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+    }
+}
+  
