@@ -6,13 +6,15 @@
 #include <QPainter>
 #include <QPixmap>
 
-
 MessageBubble::MessageBubble(const QString &avatar, const QString &nickname,
-                             const QString &content, const QString &timestamp,
+                             const QString &content, const QString timestamp,
                              bool isOwn, QWidget *parent)
     : QWidget(parent), isOwnMessage(isOwn) {
   try {
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
+    mainLayout->setContentsMargins(5, 5, 5, 5);
+    mainLayout->setSpacing(8);
+
     if (!mainLayout)
       throw std::runtime_error("Failed to create mainLayout");
 
@@ -49,6 +51,9 @@ MessageBubble::MessageBubble(const QString &avatar, const QString &nickname,
 
     // 消息内容布局
     QVBoxLayout *contentLayout = new QVBoxLayout();
+    contentLayout->setContentsMargins(2, 2, 2, 2);
+    contentLayout->setSpacing(2);
+
     if (!contentLayout)
       throw std::runtime_error("Failed to create contentLayout");
 
@@ -65,13 +70,21 @@ MessageBubble::MessageBubble(const QString &avatar, const QString &nickname,
     contentLabel->setProperty("own", isOwn ? "true" : "false");
     contentLabel->setWordWrap(true);
 
-    // 动态宽度
+    // 动态宽度计算
     QFontMetrics fm(contentLabel->font());
-    int maxWidth = parent ? parent->width() * 0.7 : 400; // 最大宽度 70%
-    int textWidth = fm.horizontalAdvance(content) + 30;  // 文字宽度 + padding
-    if (textWidth > maxWidth)
-      textWidth = maxWidth;
-    contentLabel->setFixedWidth(textWidth);
+    int parentWidth = parentWidget() ? parentWidget()->width() : 800;
+    int maxWidth = qBound(250, static_cast<int>(parentWidth * 0.7), 800);
+    QRect textRect = fm.boundingRect(QRect(0, 0, maxWidth - 20, 0),
+                                     Qt::TextWordWrap | Qt::AlignLeft, content);
+    int textWidth = textRect.width() + 20;
+    contentLabel->setMaximumWidth(maxWidth);
+    contentLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+
+    // 估算行数
+    int lineCount = textRect.height() / fm.lineSpacing();
+    // qDebug() << "MessageBubble: maxWidth=" << maxWidth
+    //          << ", textWidth=" << textWidth << ", lineCount=" << lineCount
+    //          << ", text=" << content.left(50);
 
     timeLabel = new QLabel(timestamp);
     if (!timeLabel)
@@ -82,23 +95,20 @@ MessageBubble::MessageBubble(const QString &avatar, const QString &nickname,
     contentLayout->addWidget(nicknameLabel);
     contentLayout->addWidget(contentLabel);
     contentLayout->addWidget(timeLabel);
-    contentLayout->setSpacing(2);
-    contentLayout->setContentsMargins(5, 5, 5, 5);
 
     // 消息方向
     if (isOwnMessage) {
-      mainLayout->addStretch();
+      mainLayout->addStretch(1);
       mainLayout->addLayout(contentLayout);
       mainLayout->addWidget(avatarLabel);
     } else {
       mainLayout->addWidget(avatarLabel);
       mainLayout->addLayout(contentLayout);
-      mainLayout->addStretch();
+      mainLayout->addStretch(1);
     }
 
     setObjectName("MessageBubble");
-    setLayout(mainLayout);
-    qDebug() << "MessageBubble: Created for nickname:" << nickname;
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
   } catch (const std::exception &e) {
     qDebug() << "MessageBubble: Exception during construction:" << e.what();
     throw;
@@ -109,7 +119,7 @@ MessageBubble::MessageBubble(const QString &avatar, const QString &nickname,
 }
 
 MessageBubble::~MessageBubble() {
-  qDebug() << "MessageBubble: Destructor called";
+  // qDebug() << "MessageBubble: Destructor called";
 }
 
 void MessageBubble::paintEvent(QPaintEvent *event) {

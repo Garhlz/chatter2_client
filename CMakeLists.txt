@@ -19,6 +19,12 @@ set(PROJECT_SOURCES
     src/ui/ChatWindow.h
     src/ui/MessageBubble.cpp
     src/ui/MessageBubble.h
+    src/ui/PublicChatTab.cpp
+    src/ui/PublicChatTab.h
+    src/ui/PrivateChatTab.cpp
+    src/ui/PrivateChatTab.h
+    src/ui/GroupChatTab.cpp
+    src/ui/GroupChatTab.h
     src/network/ChatClient.cpp
     src/network/ChatClient.h
     src/utils/MessageHandler.cpp

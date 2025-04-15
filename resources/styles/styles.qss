@@ -1,203 +1,189 @@
-/* 全局样式 */
+/* Global Styles */
 * {
-    font-family: "Segoe UI", "Microsoft YaHei", "Noto Sans", "Arial", sans-serif;
+    font-family: "Segoe UI", "Microsoft YaHei", "Noto Sans", sans-serif;
     font-size: 14px;
 }
 
-/* 登录和注册窗口 */
+/* Login and Register Windows */
 #LoginWindow, #RegisterWindow {
-    background: transparent; /* 透明背景支持圆角 */
+    background: transparent;
 }
 
 QWidget#centralWidget {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #FFF0F5, stop:1 #FCE4EC);
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFD1E1, stop:1 #E1D1FF);
     border-radius: 12px;
+    padding: 20px;
 }
 
-/* 输入框 */
+/* Input Fields */
 #usernameEdit, #passwordEdit, #nicknameEdit {
-    padding: 10px;
-    border: 2px solid #FFCDD2;
-    border-radius: 6px;
+    padding: 12px;
+    border: 2px solid #FFE4EC;
+    border-radius: 8px;
     background-color: #FFFFFF;
     font-size: 14px;
-    margin: 6px 0;
+    margin: 8px 0;
 }
 
 #usernameEdit:focus, #passwordEdit:focus, #nicknameEdit:focus {
-    border-color: #C8E6C9; /* 绿色点缀 */
+    border-color: #F06292;
+    background-color: #FFF5F8;
     outline: none;
 }
 
-/* 主要按钮 */
+/* Buttons */
 #loginButton, #registerButton, #backToLoginButton {
-    padding: 10px 24px;
+    padding: 12px 30px;
     font-size: 14px;
-    font-weight: bold;
-    border-radius: 6px;
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #F06292, stop:1 #EC407A);
+    font-weight: 600;
+    border-radius: 8px;
+    background: #5782df;
     color: #FFFFFF;
     border: none;
-    min-width: 100px;
+    min-width: 120px;
 }
 
 #loginButton:hover, #registerButton:hover, #backToLoginButton:hover {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #EC407A, stop:1 #D81B60);
+    background: #B196FF;
 }
 
-/*
-#backToLoginButton {
-    background: none;
-    color: #F06292;
-    font-size: 13px;
-    padding: 8px 12px;
-    border: 1px solid #FFCDD2;
-    border-radius: 4px;
-}
-
-#backToLoginButton:hover {
-    color: #D81B60;
-    border-color: #F06292;
-}
-*/
-
-
-/* 状态标签 */
+/* Status Label */
 #statusLabel {
-    color: #D81B60;
+    color: #7B61FF;
     font-size: 13px;
-    padding: 6px;
+    padding: 8px;
 }
 
-/* 聊天窗口 */
+/* Chat Window */
 #ChatWindow {
-    background-color: #FFF0F5;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFF5F8, stop:1 #F5F0FF);
 }
 
-/* 选项卡 */
+/* Tab Widget */
 QTabWidget {
     background: #FFFFFF;
+    border-radius: 10px;
 }
 
 #chatTabs::pane {
-    border: 1px solid #FFCDD2;
-    border-radius: 10px;
+    border: 1px solid #FFE4EC;
     background-color: #FFFFFF;
+    border-radius: 10px;
 }
 
 QTabBar::tab {
-    background-color: #FFF0F5;
-    padding: 12px 24px;
-    border: 1px solid #FFCDD2;
+    background: #FFE4EC;
+    padding: 14px 30px;
+    border: 1px solid #FFB1C8;
     border-bottom: none;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    margin-right: 4px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin-right: 6px;
     font-size: 14px;
-    color: #880E4F;
+    color: #7B61FF;
 }
 
 QTabBar::tab:selected {
-    background-color: #FFFFFF;
+    background: #FFFFFF;
     color: #F06292;
     font-weight: bold;
-    border-bottom: 2px solid #F06292;
+    border-bottom: 3px solid #F06292;
 }
 
 QTabBar::tab:hover {
-    background-color: #FCE4EC;
+    background: #FFF0F5;
 }
 
-/* 聊天容器 */
+/* Chat Containers */
 #publicChatContainer, #privateChatContainer, #groupChatContainer {
-    background-color: #FFFFFF;
-    border-radius: 10px;
-    padding: 12px;
-    /*
-    min-height: 300px;
-    min-width: 500px; /* 确保聊天区宽敞 */
-    */
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 10px;
 }
 
-/* 滚动区域 */
+/* Scroll Areas */
 #publicChatDisplay, #privateChatDisplay, #groupChatDisplay {
     border: none;
-    background-color: transparent;
-    /*
-    min-height: 300px;
-    min-width: 500px;
-    */
+    background: transparent;
+    margin: 0;
 }
 
-/* 输入框 */
+QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+QScrollArea > QWidget > QWidget {
+    background-color: transparent;
+}
+
+/* Input Fields */
 #publicMessageInput, #privateMessageInput, #groupMessageInput {
-    padding: 10px;
-    border: 1px solid #FFCDD2;
-    border-radius: 6px;
-    background-color: #FFFFFF;
+    padding: 12px;
+    border: 1px solid #FFE4EC;
+    border-radius: 8px;
+    background: #FFF5F8;
     font-size: 14px;
 }
 
-/* 发送按钮 */
+#publicMessageInput:focus, #privateMessageInput:focus, #groupMessageInput:focus {
+    border-color: #F06292;
+}
+
+/* Buttons */
 #publicSendButton, #privateSendButton, #groupSendButton, #sendFileButton {
-    padding: 10px;
-    border-radius: 6px;
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #F06292, stop:1 #EC407A);
+    padding: 12px 20px;
+    border-radius: 8px;
+    background: #5782df;
     color: #FFFFFF;
-    font-weight: bold;
+    font-weight: 600;
     border: none;
-    min-width: 48px;
+    min-width: 80px;
 }
 
 #publicSendButton:hover, #privateSendButton:hover, #groupSendButton:hover, #sendFileButton:hover {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #EC407A, stop:1 #D81B60);
+    background: #B196FF;
 }
 
-/* 分割器 */
+/* Splitter */
 #privateSplitter {
-    background-color: #FFF0F5;
+    background: #FFF5F8;
 }
 
 QSplitter::handle:horizontal {
-    width: 4px;
-    background-color: #FFCDD2;
+    width: 6px;
+    background: #FFB1C8;
 }
 
-/* 在线用户列表 */
+/* Online Users List */
 #onlineUsersList {
-    border: 1px solid #FFCDD2;
-    border-radius: 8px;
-    background-color: #FFFFFF;
-    padding: 8px;
-    max-width: 150px; /* 严格限制宽度 */
+    border: 1px solid #FFE4EC;
+    border-radius: 10px;
+    background: #FFFFFF;
+    padding: 10px;
 }
 
 #onlineUsersList::item {
-    padding: 10px;
-    border-radius: 4px;
-    margin: 4px;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 6px;
 }
 
 #onlineUsersList::item:selected {
-    background-color: #F06292;
+    background: #F06292;
     color: #FFFFFF;
 }
 
 #onlineUsersList::item:hover {
-    background-color: #FCE4EC;
+    background: #FFF0F5;
 }
 
-/* 群组选择框 */
+/* Group Combo */
 #groupCombo {
-    padding: 10px;
-    border: 1px solid #FFCDD2;
-    border-radius: 6px;
-    background-color: #FFFFFF;
+    padding: 12px;
+    border: 1px solid #FFE4EC;
+    border-radius: 8px;
+    background: #FFF5F8;
     font-size: 14px;
 }
 
@@ -205,126 +191,130 @@ QSplitter::handle:horizontal {
     border-color: #F06292;
 }
 
-/* 状态栏 */
+/* Status Bar */
 QStatusBar {
-    background-color: #FFF0F5;
-    border-top: 1px solid #FFCDD2;
-    padding: 8px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FFB1C8, stop:1 #C8B1FF);
+    border-top: 1px solid #FFE4EC;
+    padding: 10px;
 }
 
-#onlineCountLabel {
-    color: #880E4F;
-    padding: 4px 12px;
+#statusLabel, #onlineCountLabel {
+    color: #7B61FF;
+    font-weight: 600;
+    padding: 6px 15px;
 }
 
 #logoutButton {
-    background-color: #EF5350;
+    background: #FF6F91;
     color: #FFFFFF;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
 }
 
 #logoutButton:hover {
-    background-color: #D81B60;
+    background: #FF4A7D;
 }
 
-/* 滚动条 */
+/* Scrollbar */
 QScrollBar:vertical {
     border: none;
-    background-color: #FFF0F5;
-    width: 10px;
+    background: #FFF5F8;
+    width: 8px;
     margin: 0;
 }
 
 QScrollBar::handle:vertical {
-    background-color: #F8BBD0;
-    border-radius: 5px;
-    min-height: 30px;
+    background: #FFB1C8;
+    border-radius: 4px;
+    min-height: 40px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background-color: #F06292;
+    background: #F06292;
 }
 
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-    background-color: #FFF0F5;
+    background: transparent;
 }
 
-/* 用户标签 */
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+/* Horizontal scrollbar - hide it */
+QScrollBar:horizontal {
+    height: 0px;
+    background: transparent;
+}
+
+/* Users Label */
 #usersLabel {
-    font-weight: bold;
-    color: #880E4F;
-    padding: 8px;
+    font-weight: 600;
+    color: #7B61FF;
+    padding: 10px;
 }
 
-/* 消息气泡 */
+/* Message Bubble */
 #MessageBubble {
-    margin: 8px 12px;
-    max-width: 80%;
+    margin: 6px 8px;
+    min-width: 100px;
 }
 
-/* 头像 */
+/* Avatar */
 #avatarLabel {
     min-width: 40px;
     min-height: 40px;
     max-width: 40px;
     max-height: 40px;
-    border-radius: 20px;
-    background-color: #FCE4EC;
-    border: 1px solid #FFCDD2;
 }
 
-/* 昵称 */
+/* Nickname */
 #nicknameLabel {
-    font-weight: bold;
-    color: #880E4F;
-    padding: 4px 12px;
+    font-weight: 600;
+    color: #7B61FF;
+    padding: 2px 8px;
     margin: 0;
-    background-color: transparent;
 }
 
 #nicknameLabel[own="true"] {
     text-align: right;
+    color: #F06292;
 }
 
-/* 时间戳 */
+/* Timestamp */
 #timeLabel {
-    color: #AD1457;
+    color: #9C80FF;
     font-size: 11px;
-    padding: 4px 12px;
+    padding: 2px 8px;
     margin: 0;
-    background-color: transparent;
 }
 
 #timeLabel[own="true"] {
     text-align: right;
 }
 
-/* 消息内容 */
+/* Content */
 #contentLabel {
-    padding: 12px 16px;
-    margin: 6px 12px;
-    border-radius: 16px;
+    padding: 10px 12px;
+    margin: 4px 8px;
+    border-radius: 18px;
     white-space: pre-wrap;
-    line-height: 1.4;
-    max-width: 100%;
+    line-height: 1.5;
 }
 
 #contentLabel[own="true"] {
-    background-color: #F06292;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F06292, stop:1 #FF8AB1);
     color: #FFFFFF;
-    border: none;
-    margin-left: auto;
+    border-top-right-radius: 4px;
 }
 
 #contentLabel[own="false"] {
-    background-color: #FCE4EC;
-    color: #880E4F;
-    border: none;
-    margin-right: auto;
+    background: #E6E1FF;
+    color: #7B61FF;
+    border-top-left-radius: 4px;
 }
 
 #contentLabel:hover {
-    opacity: 0.9;
+    opacity: 0.95;
 }

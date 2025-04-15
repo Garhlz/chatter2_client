@@ -218,14 +218,18 @@ void ChatClient::processMessage(const QJsonObject &message) {
       }
       QJsonArray users = message["onlineUsers"].toArray();
       int count = users.size();
+      qDebug() << "Online users update: " << users << "count = " << count;
       emit onlineUsersUpdated(users, count);
+
     } else if (content == "history_messages") {
-      qDebug() << "history messages:" << message;
+      // qDebug() << "history messages:" << message;
+      // 注释掉, 太长了
       if (!message.contains("messages") || !message["messages"].isArray()) {
         emit errorOccurred("历史消息缺少 messages 数组");
         return;
       }
       QJsonArray messages = message["messages"].toArray();
+      qDebug() << "History received successfully, number = " << messages.size();
       emit historyMessagesReceived(messages);
     } else {
       emit errorOccurred(QString("未知系统消息内容: %1").arg(content));

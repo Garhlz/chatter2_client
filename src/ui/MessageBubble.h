@@ -4,14 +4,13 @@
 #include <QLabel>
 #include <QWidget>
 
-
 class MessageBubble : public QWidget {
   Q_OBJECT
 
 public:
-  MessageBubble(const QString &avatar, const QString &nickname,
-                const QString &content, const QString &timestamp, bool isOwn,
-                QWidget *parent = nullptr);
+  explicit MessageBubble(const QString &avatar, const QString &nickname,
+                         const QString &content, const QString timestamp,
+                         bool isOwn, QWidget *parent = nullptr);
   ~MessageBubble();
 
 protected:

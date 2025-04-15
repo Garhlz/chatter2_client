@@ -1,20 +1,17 @@
 #ifndef CHATWINDOW_H
 #define CHATWINDOW_H
 
+#include "GroupChatTab.h"
 #include "MessageBubble.h"
+#include "PrivateChatTab.h"
+#include "PublicChatTab.h"
 #include "network/ChatClient.h"
-#include <QComboBox>
-#include <QFileDialog>
-#include <QHBoxLayout>
+#include <QJsonArray>
+#include <QJsonValue>
 #include <QLabel>
-#include <QLineEdit>
-#include <QListWidget>
 #include <QMainWindow>
-#include <QPushButton>
-#include <QScrollArea>
 #include <QSet>
 #include <QTabWidget>
-#include <QVBoxLayout>
 
 
 class ChatWindow : public QMainWindow {
@@ -40,13 +37,8 @@ public slots:
   void handleHistoryMessagesReceived(const QJsonArray &messages);
 
 private slots:
-  void sendMessage();
-  void sendPrivateMessage();
-  void sendGroupMessage();
-  void sendFile();
   void handleLogout();
-  void handleError(const QString &error);
-  void handleUserSelected();
+  void handleError(const QString &error); // 新增声明
 
 private:
   void setupUi();
@@ -54,7 +46,6 @@ private:
   void appendMessageBubble(QWidget *container, const QString &sender,
                            const QString &content, const QString &timestamp,
                            const QString &avatar = QString());
-  void updateOnlineUsersList(const QJsonArray &users);
 
   ChatClient *chatClient;
   QString nickname;
@@ -62,40 +53,16 @@ private:
   QTabWidget *chatTabs;
   QSet<qint64> displayedMessages;
 
-  // 公共聊天页
-  QWidget *publicChatTab;
-  QScrollArea *publicChatDisplay;
-  QWidget *publicChatContainer;
-  QVBoxLayout *publicChatLayout;
-  QLineEdit *publicMessageInput;
-  QPushButton *publicSendButton;
+  // Tabs
+  PublicChatTab *publicChatTab;
+  PrivateChatTab *privateChatTab;
+  GroupChatTab *groupChatTab;
 
-  // 私聊页
-  QWidget *privateChatTab;
-  QScrollArea *privateChatDisplay;
-  QWidget *privateChatContainer;
-  QLineEdit *privateMessageInput;
-  QPushButton *privateSendButton;
-  QListWidget *onlineUsersList;
-  QString selectedUser;
-
-  // 群聊页
-  QWidget *groupChatTab;
-  QScrollArea *groupChatDisplay;
-  QWidget *groupChatContainer;
-  QVBoxLayout *groupChatLayout;
-  QComboBox *groupCombo;
-  QLineEdit *groupMessageInput;
-  QPushButton *groupSendButton;
-
-  // 文件传输
-  QPushButton *sendFileButton;
-
-  // 状态栏
+  // Status Bar
   QLabel *statusLabel;
   QLabel *onlineCountLabel;
 
-  // 初始化标志
+  // Initialization Flag
   bool isInitialized;
 };
 

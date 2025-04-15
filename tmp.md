@@ -1,7 +1,3 @@
-我正在 Windows 11 系统上，使用 Qt 6.5.3（MinGW 11.2.0 64 位）和 CMake（版本 ≥ 3.16）开发一个基于 C++ 的 Qt 聊天应用客户端。目前，公共聊天（聊天大厅）模块的基础功能已经完成，但私聊、群聊以及文件上传等功能模块尚未实现。
-
-当前我遇到了样式渲染方面的问题：在 ChatWindow 中引用的 styles 样式并未生效，而登录界面和注册界面中的样式却可以正常应用。我想请教这是为何？是否可能是样式表的加载方式或作用域存在差异？希望你能帮我分析原因。
-
-此外，我有一个结构上的问题想请教：是否可以将聊天大厅、私聊和群聊这三个页面分别拆分成独立的 .cpp 文件，以提高代码的可维护性和清晰度？
-
-我将在下方附上我的全部代码，请帮我分析并给出修改后可运行的完整版本，感谢！
+ Sent message to client /0:0:0:0:0:0:0:1: {"type":"SYSTEM","username":null,"password":null,"nickname":null,"receiver":null,"content":"online_users","token":null,"status":null,"timestamp":"2025-04-15T12:00:44.3025686","errorMessage":null,"messageId":null,
+ 
+ "onlineUsers":[{"userId":1,"username":"1","password":"$2a$10$kapg7xU.HtYPZu1Hc2RKN.BQjbrQ/THNriHGG0Cm2QcsD3ty6dC5S","nickname":"user1","avatarUrl":"https://secure.gravatar.com/avatar/default?s=200&d=mp","status":0,"lastHeartbeat":[2025,4,15,11,53,17,390000000],"createdAt":[2025,4,14,18,5,12,538000000],"lastLoginAt":[2025,4,15,11,46,41,489000000]},{"userId":2,"username":"2","password":"$2a$10$V4QVo/Lb8aHwIWuwCIg1OetqMfc./xbBTTHMtI.5EAA9oIerJVLpO","nickname":"user2","avatarUrl":"https://secure.gravatar.com/avatar/default?s=200&d=mp","status":0,"lastHeartbeat":[2025,4,15,11,52,58,96000000],"createdAt":[2025,4,14,18,6,10,724000000],"lastLoginAt":[2025,4,15,11,50,12,295000000]}],"messages":null}
