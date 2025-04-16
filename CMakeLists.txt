@@ -23,10 +23,14 @@ set(PROJECT_SOURCES
     src/ui/PublicChatTab.h
     src/ui/PrivateChatTab.cpp
     src/ui/PrivateChatTab.h
+    src/ui/PrivateChatSession.cpp
+    src/ui/PrivateChatSession.h
     src/ui/GroupChatTab.cpp
     src/ui/GroupChatTab.h
     src/network/ChatClient.cpp
     src/network/ChatClient.h
+    src/network/MessageProcessor.cpp
+    src/network/MessageProcessor.h
     src/utils/MessageHandler.cpp
     src/utils/MessageHandler.h
     src/utils/JsonConverter.cpp

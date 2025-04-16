@@ -5,10 +5,11 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 
-class JsonConverter {
-public:
-    static QByteArray toUtf8Json(const QJsonObject &jsonObj);
-    static QJsonObject toJsonObject(const QByteArray &data);
+class JsonConverter
+{
+   public:
+    static QByteArray toUtf8Json(const QJsonObject& jsonObj);
+    static QJsonObject toJsonObject(const QByteArray& data);
 };
 
-#endif // JSONCONVERTER_H
+#endif  // JSONCONVERTER_H

@@ -74,6 +74,7 @@ void PublicChatTab::sendMessage()
 
 void PublicChatTab::appendMessage(const QString& sender, const QString& content,
                                   const QString& timestamp)
+// 这里的sender一定是username而不是nickname
 {
     QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(publicChatContainer->layout());
     if (!layout)

@@ -1,6 +1,7 @@
 #include "MessageHandler.h"
 
-QJsonObject MessageHandler::createLoginMessage(const QString &username, const QString &password) {
+QJsonObject MessageHandler::createLoginMessage(const QString& username, const QString& password)
+{
     QJsonObject message;
     message["type"] = "LOGIN";
     message["username"] = username;
@@ -8,7 +9,9 @@ QJsonObject MessageHandler::createLoginMessage(const QString &username, const QS
     return message;
 }
 
-QJsonObject MessageHandler::createRegisterMessage(const QString &username, const QString &password, const QString &nickname) {
+QJsonObject MessageHandler::createRegisterMessage(const QString& username, const QString& password,
+                                                  const QString& nickname)
+{
     QJsonObject message;
     message["type"] = "REGISTER";
     message["username"] = username;
@@ -17,7 +20,8 @@ QJsonObject MessageHandler::createRegisterMessage(const QString &username, const
     return message;
 }
 
-QJsonObject MessageHandler::createChatMessage(const QString &content, const QString &token) {
+QJsonObject MessageHandler::createChatMessage(const QString& content, const QString& token)
+{
     QJsonObject message;
     message["type"] = "CHAT";
     message["content"] = content;
@@ -25,16 +29,21 @@ QJsonObject MessageHandler::createChatMessage(const QString &content, const QStr
     return message;
 }
 
-QJsonObject MessageHandler::createPrivateChatMessage(const QString &receiver, const QString &content, const QString &token) {
+QJsonObject MessageHandler::createPrivateChatMessage(const QString& receiver,
+                                                     const QString& content, const QString& token)
+{
     QJsonObject message;
     message["type"] = "PRIVATE_CHAT";
-    message["receiver"] = receiver;
+    message["receiver"] = receiver;  // 此处是username而不是nickname!!
     message["content"] = content;
     message["token"] = token;
+    qDebug() << "send private chat: " << message;  // 在这里debug好了
     return message;
 }
 
-QJsonObject MessageHandler::createGroupChatMessage(const QString &groupName, const QString &content, const QString &token) {
+QJsonObject MessageHandler::createGroupChatMessage(const QString& groupName, const QString& content,
+                                                   const QString& token)
+{
     QJsonObject message;
     message["type"] = "GROUP_CHAT";
     message["groupName"] = groupName;
@@ -43,7 +52,9 @@ QJsonObject MessageHandler::createGroupChatMessage(const QString &groupName, con
     return message;
 }
 
-QJsonObject MessageHandler::createFileMessage(const QString &receiver, const QByteArray &fileContent, const QString &token) {
+QJsonObject MessageHandler::createFileMessage(const QString& receiver,
+                                              const QByteArray& fileContent, const QString& token)
+{
     QJsonObject message;
     message["type"] = "FILE";
     message["receiver"] = receiver;
@@ -52,32 +63,38 @@ QJsonObject MessageHandler::createFileMessage(const QString &receiver, const QBy
     return message;
 }
 
-QJsonObject MessageHandler::createLogoutMessage(const QString &token) {
+QJsonObject MessageHandler::createLogoutMessage(const QString& token)
+{
     QJsonObject message;
     message["type"] = "LOGOUT";
     message["token"] = token;
     return message;
 }
 
-QJsonObject MessageHandler::createHeartbeatMessage(const QString &token) {
+QJsonObject MessageHandler::createHeartbeatMessage(const QString& token)
+{
     QJsonObject message;
     message["type"] = "HEARTBEAT";
     message["token"] = token;
     return message;
 }
 
-QString MessageHandler::getErrorMessage(const QJsonObject &response) {
+QString MessageHandler::getErrorMessage(const QJsonObject& response)
+{
     return response["errorMessage"].toString();
 }
 
-QString MessageHandler::getSystemMessage(const QJsonObject &response) {
+QString MessageHandler::getSystemMessage(const QJsonObject& response)
+{
     return response["content"].toString();
 }
 
-QJsonArray MessageHandler::getOnlineUsers(const QJsonObject &response) {
+QJsonArray MessageHandler::getOnlineUsers(const QJsonObject& response)
+{
     return response["onlineUsers"].toArray();
 }
 
-int MessageHandler::getOnlineCount(const QJsonObject &response) {
+int MessageHandler::getOnlineCount(const QJsonObject& response)
+{
     return response["onlineCount"].toInt();
 }

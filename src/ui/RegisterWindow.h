@@ -7,42 +7,43 @@
 #include <QMainWindow>
 #include <QPushButton>
 
-class RegisterWindow : public QMainWindow {
-  Q_OBJECT
+class RegisterWindow : public QMainWindow
+{
+    Q_OBJECT
 
-public:
-  explicit RegisterWindow(ChatClient *client, QWidget *parent = nullptr);
-  ~RegisterWindow();
+   public:
+    explicit RegisterWindow(ChatClient* client, QWidget* parent = nullptr);
+    ~RegisterWindow();
 
-signals:
-  void registerSuccessful();
-  void showLoginWindow();
+   signals:
+    void registerSuccessful();
+    void showLoginWindow();
 
-private slots:
-  void handleRegister();
-  void handleRegisterSuccess(const QString &token);
-  void handleError(const QString &error);
-  void showLogin();
+   private slots:
+    void handleRegister();
+    void handleRegisterSuccess(const QString& token);
+    void handleError(const QString& error);
+    void showLogin();
 
-protected:
-  void mousePressEvent(QMouseEvent *event) override;
-  void mouseMoveEvent(QMouseEvent *event) override;
-  void mouseReleaseEvent(QMouseEvent *event) override;
+   protected:
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
-private:
-  void setupUi();
-  void connectSignals();
+   private:
+    void setupUi();
+    void connectSignals();
 
-  ChatClient *chatClient;
-  QWidget *centralWidget;
-  QLineEdit *usernameEdit;
-  QLineEdit *passwordEdit;
-  QLineEdit *nicknameEdit;
-  QPushButton *registerButton;
-  QPushButton *backToLoginButton;
-  QLabel *statusLabel;
-  bool isDragging;
-  QPoint dragPosition;
+    ChatClient* chatClient;
+    QWidget* centralWidget;
+    QLineEdit* usernameEdit;
+    QLineEdit* passwordEdit;
+    QLineEdit* nicknameEdit;
+    QPushButton* registerButton;
+    QPushButton* backToLoginButton;
+    QLabel* statusLabel;
+    bool isDragging;
+    QPoint dragPosition;
 };
 
-#endif // REGISTERWINDOW_H
+#endif  // REGISTERWINDOW_H
