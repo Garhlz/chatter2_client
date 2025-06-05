@@ -29,8 +29,28 @@ void LoginWindow::setupUi()
     setCentralWidget(centralWidget);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
-    mainLayout->setSpacing(10);
-    mainLayout->setContentsMargins(20, 20, 20, 20);
+    mainLayout->setSpacing(8);
+    mainLayout->setContentsMargins(20, 10, 20, 10);
+
+    // 标题容器
+    QWidget* titleContainer = new QWidget();
+    titleContainer->setObjectName("titleContainer");
+    QVBoxLayout* titleLayout = new QVBoxLayout(titleContainer);
+    titleLayout->setSpacing(4);
+    titleLayout->setContentsMargins(0, 0, 0, 0);
+    titleLayout->setAlignment(Qt::AlignCenter);
+
+    QLabel* titleLabel = new QLabel("My Chatter");
+    titleLabel->setObjectName("titleLabel");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLayout->addWidget(titleLabel);
+
+    QLabel* subtitleLabel = new QLabel("connect the world");
+    subtitleLabel->setObjectName("subtitleLabel");
+    subtitleLabel->setAlignment(Qt::AlignCenter);
+    titleLayout->addWidget(subtitleLabel);
+
+    mainLayout->addWidget(titleContainer);
 
     QFormLayout* formLayout = new QFormLayout();
     formLayout->setSpacing(10);
@@ -67,7 +87,7 @@ void LoginWindow::setupUi()
     mainLayout->addLayout(formLayout);
     mainLayout->addLayout(buttonLayout);
     mainLayout->addWidget(statusLabel);
-    mainLayout->addStretch();
+    mainLayout->addSpacerItem(new QSpacerItem(0, 20, QSizePolicy::Minimum, QSizePolicy::Fixed));
 
     setFixedSize(450, 350);
     setObjectName("LoginWindow");

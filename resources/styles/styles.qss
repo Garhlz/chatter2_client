@@ -12,7 +12,29 @@
 QWidget#centralWidget {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFD1E1, stop:1 #E1D1FF);
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px;
+}
+
+/* Title Container */
+QWidget#titleContainer {
+    background: transparent;
+}
+
+/* Title and Subtitle */
+QLabel#titleLabel {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333333;
+    padding: 5px;
+    letter-spacing: 1px;
+}
+
+QLabel#subtitleLabel {
+    font-size: 14px;
+    font-weight: normal;
+    color: #666666;
+    padding: 5px;
+    letter-spacing: 0.5px;
 }
 
 /* Input Fields */
@@ -178,6 +200,29 @@ QSplitter::handle:horizontal {
     background: #FFF0F5;
 }
 
+/* Offline Users List */
+#offlineUsersList {
+    border: 1px solid #FFE4EC;
+    border-radius: 10px;
+    background: #FFFFFF;
+    padding: 10px;
+}
+
+#offlineUsersList::item {
+    padding: 12px;
+    border-radius: 6px;
+    margin: 6px;
+}
+
+#offlineUsersList::item:selected {
+    background: #F06292;
+    color: #FFFFFF;
+}
+
+#offlineUsersList::item:hover {
+    background: #FFF0F5;
+}
+
 /* Group Combo */
 #groupCombo {
     padding: 12px;
@@ -317,4 +362,80 @@ QScrollBar:horizontal {
 
 #contentLabel:hover {
     opacity: 0.95;
+}
+
+
+QWidget#PrivateChatTab {
+    background: #FFF5F8;
+}
+QWidget[objectName^="PrivateChatSession"] {
+    background: #FFFFFF;
+    border-radius: 12px;
+}
+QScrollArea[objectName^="privateChatDisplay"] {
+    border: none;
+    background: transparent;
+    margin: 0;
+}
+QWidget[objectName^="privateChatContainer"] {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 10px;
+}
+QLineEdit[objectName^="privateMessageInput"] {
+    padding: 12px;
+    border: 1px solid #FFE4EC;
+    border-radius: 8px;
+    background: #FFF5F8;
+    font-size: 14px;
+}
+QLineEdit[objectName^="privateMessageInput"]:focus {
+    border-color: #F06292;
+}
+QPushButton[objectName^="privateSendButton"], QPushButton[objectName^="sendFileButton"] {
+    padding: 12px 20px;
+    border-radius: 8px;
+    background: #5782df;
+    color: #FFFFFF;
+    font-weight: 600;
+    border: none;
+    min-width: 80px;
+}
+QPushButton[objectName^="privateSendButton"]:hover, QPushButton[objectName^="sendFileButton"]:hover {
+    background: #B196FF;
+}
+
+#onlineUsersList::item, #offlineUsersList::item {
+    padding: 12px;
+    border-radius: 6px;
+    margin: 6px;
+}
+
+#sessionList {
+    border: 1px solid #FFE4EC;
+    border-radius: 10px;
+    background: #FFFFFF;
+    padding: 10px;
+}
+#sessionList::item {
+    background: #FFE4EC;
+    padding: 14px 30px;
+    border: 1px solid #FFB1C8;
+    border-radius: 10px;
+    margin: 6px;
+    font-size: 14px;
+    color: #7B61FF;
+}
+#sessionList::item:selected {
+    background: #FFFFFF;
+    color: #F06292;
+    font-weight: bold;
+    border: 1px solid #F06292;
+}
+#sessionList::item:hover {
+    background: #FFF0F5;
+}
+#sessionStack {
+    background: #FFFFFF;
+    border-radius: 12px;
 }

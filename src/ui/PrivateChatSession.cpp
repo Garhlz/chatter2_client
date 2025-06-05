@@ -4,6 +4,9 @@
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QtConcurrent/QtConcurrent>
+#include <QFileDialog>
+#include <QTimer>
+#include "MessageBubble.h"
 
 PrivateChatSession::PrivateChatSession(ChatClient* client, const QString& curUsername_,
                                        const QString& curNickname_, const QString& targetUsername_,
@@ -15,6 +18,7 @@ PrivateChatSession::PrivateChatSession(ChatClient* client, const QString& curUse
       targetUsername(targetUsername_),
       targetNickname(targetNickname_)
 {
+    setObjectName("PrivateChatSession_" + targetUsername);
     setupUi();
     connectSignals();
 }
@@ -77,7 +81,7 @@ void PrivateChatSession::sendPrivateMessage()
     appendMessage(curUsername, targetUsername, content, timestamp);
     privateMessageInput->clear();
 }
-
+// todo
 void PrivateChatSession::sendFile()
 {
     QString filePath = QFileDialog::getOpenFileName(this, "选择文件");
@@ -123,7 +127,6 @@ void PrivateChatSession::appendMessage(const QString& sender, const QString& rec
         }
     }
 
-    // 转换为显示用的 nickname
     QString displaySender = sender;
     if (sender == curUsername)
         displaySender = curNickname;

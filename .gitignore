@@ -2,4 +2,5 @@ build/
 .cache/
 digest.txt
 tmp.md
+tmp.txt
 prompt.md

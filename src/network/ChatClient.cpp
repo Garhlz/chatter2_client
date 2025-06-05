@@ -19,7 +19,7 @@ ChatClient::ChatClient(QObject* parent) : QObject(parent)
             &ChatClient::messageReceived);
     connect(messageProcessor, &MessageProcessor::privateMessageReceived, this,
             &ChatClient::privateMessageReceived);
-    // 实际上后者也是一个信号, 相当于出发了信号的连锁反应?
+    // 实际上后者也是一个信号, 相当于发出了信号的连锁反应
     // 这样改动松耦合, 不改变chatclient和外界的接口
     connect(messageProcessor, &MessageProcessor::groupMessageReceived, this,
             &ChatClient::groupMessageReceived);

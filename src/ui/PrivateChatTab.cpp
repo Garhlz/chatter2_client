@@ -4,8 +4,10 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QScrollBar>
+#include <QStackedWidget>
 #include <QtConcurrent/QtConcurrent>
 #include <QDebug.h>
+#include "PrivateChatSession.h"
 
 PrivateChatTab::PrivateChatTab(ChatClient* client, const QString& username, const QString& nickname,
                                QWidget* parent)
@@ -17,6 +19,7 @@ PrivateChatTab::PrivateChatTab(ChatClient* client, const QString& username, cons
 
 void PrivateChatTab::setupUi()
 {
+    setObjectName("PrivateChatTab");
     QVBoxLayout* privateTabLayout = new QVBoxLayout(this);
     privateTabLayout->setContentsMargins(8, 8, 8, 8);
     privateTabLayout->setSpacing(10);
@@ -25,32 +28,39 @@ void PrivateChatTab::setupUi()
     privateSplitter->setObjectName("privateSplitter");
 
     QWidget* chatWidget = new QWidget();
-    QVBoxLayout* privateChatLayout = new QVBoxLayout(chatWidget);
+    QHBoxLayout* privateChatLayout = new QHBoxLayout(chatWidget);
     privateChatLayout->setContentsMargins(0, 0, 0, 0);
-    chatSessions = new QTabWidget();
-    chatSessions->setObjectName("chatSessions");
-    chatSessions->setTabsClosable(false);
-    privateChatLayout->addWidget(chatSessions);
+
+    sessionList = new QListWidget();
+    sessionList->setObjectName("sessionList");
+    sessionList->setMaximumWidth(200);
+    sessionList->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    sessionList->setSelectionMode(QAbstractItemView::SingleSelection);
+    privateChatLayout->addWidget(sessionList);
+
+    sessionStack = new QStackedWidget();
+    sessionStack->setObjectName("sessionStack");
+    privateChatLayout->addWidget(sessionStack);
 
     QWidget* usersWidget = new QWidget();
     QVBoxLayout* usersLayout = new QVBoxLayout(usersWidget);
     usersLayout->setContentsMargins(0, 0, 0, 0);
 
-    // 在线
     QLabel* usersLabel = new QLabel("在线用户");
     usersLabel->setObjectName("usersLabel");
     onlineUsersList = new QListWidget();
     onlineUsersList->setObjectName("onlineUsersList");
-    onlineUsersList->setMaximumWidth(200);
+    onlineUsersList->setSelectionMode(QAbstractItemView::SingleSelection);
+    onlineUsersList->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     usersLayout->addWidget(usersLabel);
     usersLayout->addWidget(onlineUsersList);
 
-    // 离线
     QLabel* offlineUsersLabel = new QLabel("离线用户");
-    offlineUsersLabel->setObjectName("offlineUsersLabel");
+    offlineUsersLabel->setObjectName("usersLabel");
     offlineUsersList = new QListWidget();
     offlineUsersList->setObjectName("offlineUsersList");
-    offlineUsersList->setMaximumWidth(200);
+    offlineUsersList->setSelectionMode(QAbstractItemView::SingleSelection);
+    offlineUsersList->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     usersLayout->addWidget(offlineUsersLabel);
     usersLayout->addWidget(offlineUsersList);
 
@@ -62,9 +72,13 @@ void PrivateChatTab::setupUi()
 
 void PrivateChatTab::connectSignals()
 {
-    // 点击就创建或者切换到目标会话
     connect(onlineUsersList, &QListWidget::itemClicked, this, &PrivateChatTab::handleUserSelected);
     connect(offlineUsersList, &QListWidget::itemClicked, this, &PrivateChatTab::handleUserSelected);
+    connect(onlineUsersList, &QListWidget::itemDoubleClicked, this,
+            &PrivateChatTab::handleUserSelected);
+    connect(offlineUsersList, &QListWidget::itemDoubleClicked, this,
+            &PrivateChatTab::handleUserSelected);
+    connect(sessionList, &QListWidget::itemClicked, this, &PrivateChatTab::handleSessionSelected);
 }
 
 void PrivateChatTab::handleUserSelected(QListWidgetItem* item)
@@ -73,27 +87,57 @@ void PrivateChatTab::handleUserSelected(QListWidgetItem* item)
     QString targetUser = item->data(Qt::UserRole).toString();
     qDebug() << "选中 user: " << targetUser;
     PrivateChatSession* session = getOrCreateSession(targetUser);
-    // 此处只需要一个参数
-    chatSessions->setCurrentWidget(session);
+    if (session)
+    {  // 检查 session 非空
+        sessionStack->setCurrentWidget(session);
+        for (int i = 0; i < sessionList->count(); ++i)
+        {
+            if (sessionList->item(i)->data(Qt::UserRole).toString() == targetUser)
+            {
+                sessionList->setCurrentItem(sessionList->item(i));
+                break;
+            }
+        }
+    }
+}
+
+void PrivateChatTab::handleSessionSelected(QListWidgetItem* item)
+{
+    if (!item) return;
+    QString targetUser = item->data(Qt::UserRole).toString();
+    PrivateChatSession* session = sessions.value(targetUser, nullptr);
+    if (session)
+    {
+        sessionStack->setCurrentWidget(session);
+    }
 }
 
 PrivateChatSession* PrivateChatTab::getOrCreateSession(const QString& targetUser)
 {
+    if (targetUser == curUsername)
+    {  // 过滤当前用户
+        qDebug() << "不能与自己创建会话: " << targetUser;
+        return nullptr;
+    }
     if (sessions.contains(targetUser))
     {
         return sessions[targetUser];
     }
-    // QString targetUsername = allUsers[targetUser]["username"].toString();
-    // targetUser已经表示username了
     QString targetNickname = allUsers[targetUser]["nickname"].toString();
 
     PrivateChatSession* session = new PrivateChatSession(chatClient, curUsername, curNickname,
                                                          targetUser, targetNickname, this);
     sessions[targetUser] = session;
-    int index = chatSessions->addTab(session, targetUser);
-    chatSessions->setTabToolTip(index, QString("Chat with %1").arg(targetUser));
 
-    // Connect session signals to ChatClient
+    sessionStack->addWidget(session);
+
+    QString displayText = targetNickname.isEmpty() ? targetUser : targetNickname;
+    QListWidgetItem* item = new QListWidgetItem(displayText);
+    item->setData(Qt::UserRole, targetUser);
+    sessionList->addItem(item);
+    sessionList->setCurrentItem(item);
+    sessionStack->setCurrentWidget(session);
+
     connect(session, &PrivateChatSession::sendMessageRequested, this,
             [=](const QString& target, const QString& content)
             { chatClient->sendPrivateMessage(target, content); });
@@ -101,7 +145,6 @@ PrivateChatSession* PrivateChatTab::getOrCreateSession(const QString& targetUser
     connect(session, &PrivateChatSession::sendFileRequested, this,
             [=](const QString& target, const QByteArray& content)
             { chatClient->sendFile(target, content); });
-    // qDebug() << "发送对象user: " << targetUser;
 
     return session;
 }
@@ -119,21 +162,25 @@ PrivateChatSession* PrivateChatTab::getOrCreateSessionTwo(const QString& sender,
 
 void PrivateChatTab::appendMessage(const QString& sender, const QString& receiver,
                                    const QString& content, const QString& timestamp)
-{  // sender表示username而不是nickname!!!
+{
     qDebug() << "sender: " << sender << "receiver: " << receiver << " content: " << content;
     PrivateChatSession* session = getOrCreateSessionTwo(sender, receiver);
-    session->appendMessage(sender, receiver, content, timestamp);
-    // 这里也需要修改receiver
+    if (session)
+    {  // 检查 session 非空
+        session->appendMessage(sender, receiver, content, timestamp);
+    }
 }
 
 void PrivateChatTab::handleFileReceived(const QString& sender, const QString& receiver,
                                         const QByteArray& fileContent, const QString& timestamp)
 {
     PrivateChatSession* session = getOrCreateSessionTwo(sender, receiver);
-    session->handleFileReceived(sender, receiver, fileContent, timestamp);
+    if (session)
+    {  // 检查 session 非空
+        session->handleFileReceived(sender, receiver, fileContent, timestamp);
+    }
 }
 
-// 把涉及onlinelist, offlinelist的逻辑全部提取出来, 单独处理
 void PrivateChatTab::addToOnlineList(const QJsonObject& userObj)
 {
     QString username = userObj["username"].toString();
@@ -198,7 +245,7 @@ void PrivateChatTab::removeFromOfflineList(const QJsonObject& userObj)
     }
 }
 
-void PrivateChatTab::initOnlineUsers(const QJsonArray& users)  // 初始化在线用户列表
+void PrivateChatTab::initOnlineUsers(const QJsonArray& users)
 {
     onlineUsersList->clear();
     for (const QJsonValue& user : users)
@@ -211,7 +258,7 @@ void PrivateChatTab::initOnlineUsers(const QJsonArray& users)  // 初始化在�
     }
 }
 
-void PrivateChatTab::initOfflineUsers(const QJsonArray& users)  // 初始化离线用户列表
+void PrivateChatTab::initOfflineUsers(const QJsonArray& users)
 {
     offlineUsersList->clear();
     for (const QJsonValue& user : users)
@@ -223,8 +270,7 @@ void PrivateChatTab::initOfflineUsers(const QJsonArray& users)  // 初始化离�
         offlineNumbers++;
     }
 }
-// 发现一个重大问题: 发送user类比只发送username更合适,因为username无法存储
-// 已经解决, 0表示登录
+
 void PrivateChatTab::someoneChange(int status, const QJsonObject& cur_user)
 {
     if (status == 0)  // 上线
@@ -232,7 +278,7 @@ void PrivateChatTab::someoneChange(int status, const QJsonObject& cur_user)
         QString cur_username = cur_user["username"].toString();
         if (allUsers.contains(cur_username))
         {
-            if (!allUsers[cur_username]["isOnline"].toBool())  // 取出都要写好多
+            if (!allUsers[cur_username]["isOnline"].toBool())
             {
                 allUsers[cur_username]["isOnline"] = true;
                 onlineNumbers++;
@@ -260,7 +306,7 @@ void PrivateChatTab::someoneChange(int status, const QJsonObject& cur_user)
         QString cur_username = cur_user["username"].toString();
         if (allUsers.contains(cur_username))
         {
-            if (allUsers[cur_username]["isOnline"].toBool())  // 当前在线
+            if (allUsers[cur_username]["isOnline"].toBool())
             {
                 allUsers[cur_username]["isOnline"] = false;
                 onlineNumbers--;
@@ -288,6 +334,7 @@ int PrivateChatTab::getOnlineNumber()
 {
     return onlineNumbers;
 }
+
 int PrivateChatTab::getOfflineNumber()
 {
     return offlineNumbers;
