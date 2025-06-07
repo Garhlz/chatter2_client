@@ -1,6 +1,6 @@
 clear
-cd C:\code_in_laptop\chatter_new\client\
-Remove-Item -Path C:\code_in_laptop\chatter_new\client\build -Recurse -Force -ErrorAction SilentlyContinue
+cd C:\code_in_laptop\chatter2\client\
+Remove-Item -Path C:\code_in_laptop\chatter2\client\build -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path "build"
 cd build
 

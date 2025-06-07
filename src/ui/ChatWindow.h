@@ -29,8 +29,6 @@ class ChatWindow : public QMainWindow
                                       const QString& content, qint64 messageId);
     void handleGroupMessageReceived(const QString& sender, const QString& groupName,
                                     const QString& content, qint64 messageId);
-    void handleFileReceived(const QString& sender, const QString& receiver,
-                            const QByteArray& fileContent, qint64 messageId);
     void handleOnlineUsersInit(const QJsonArray& users);
     void handleOfflineUsersInit(const QJsonArray& users);
     // void handleUserAppend(const QJsonObject& user);

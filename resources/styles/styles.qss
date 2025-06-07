@@ -339,7 +339,7 @@ QScrollBar:horizontal {
     text-align: right;
 }
 
-/* Content */
+/* Content (普通消息) */
 #contentLabel {
     padding: 10px 12px;
     margin: 4px 8px;
@@ -360,10 +360,50 @@ QScrollBar:horizontal {
     border-top-left-radius: 4px;
 }
 
+/* 文件消息特定样式 */
+#contentLabel[file="true"] {
+    color: #1E90FF;
+    text-decoration: underline;
+    padding: 8px 12px;
+    background: #F5F5F5; /* 轻灰色背景区分文件消息 */
+    border: 1px solid #D3D3D3; /* 边框增强区分 */
+}
+
+#contentLabel[file="true"][own="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFF0F5, stop:1 #FFE4E1); /* 浅粉色渐变 */
+    border-top-right-radius: 4px;
+}
+
+#contentLabel[file="true"][own="false"] {
+    border-top-left-radius: 4px;
+}
+
 #contentLabel:hover {
     opacity: 0.95;
 }
 
+/* 进度条 */
+QProgressBar {
+    border: 1px solid #D3D3D3;
+    border-radius: 5px;
+    background-color: #F5F5F5;
+    height: 18px;
+    margin: 4px 8px;
+}
+
+QProgressBar::chunk {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #7B61FF, stop:1 #9C80FF);
+    border-radius: 5px;
+}
+
+/* 状态标签 */
+#statusLabel {
+    font-size: 11px;
+    color: #666666;
+    padding: 2px 8px;
+    margin: 0 8px;
+}
+/* todo 但愿修改没有问题 */
 
 QWidget#PrivateChatTab {
     background: #FFF5F8;

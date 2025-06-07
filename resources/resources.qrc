@@ -2,5 +2,6 @@
 <RCC version="1.0">
     <qresource prefix="/">
         <file>styles/styles.qss</file>
+        <file>config.json</file>
     </qresource>
 </RCC>

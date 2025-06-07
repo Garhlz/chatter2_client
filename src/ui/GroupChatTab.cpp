@@ -92,8 +92,8 @@ void GroupChatTab::appendMessage(const QString& sender, const QString& content,
         }
     }
 
-    MessageBubble* bubble =
-        new MessageBubble("", sender, content, timestamp, sender == nickname, groupChatContainer);
+    MessageBubble* bubble = new MessageBubble("", sender, content, timestamp, sender == nickname,
+                                              false, groupChatContainer);
     layout->addWidget(bubble);
     layout->addStretch();
 

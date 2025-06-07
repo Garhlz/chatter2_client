@@ -1,7 +1,6 @@
 clear
-cd C:\code_in_laptop\chatter_new\client\
-Remove-Item -Path C:\code_in_laptop\chatter_new\client\build -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Path "build"
+cd C:\code_in_laptop\chatter2\client\
+
 cd build 
 
 cmake .. -G "MinGW Makefiles" `
@@ -11,6 +10,6 @@ cmake .. -G "MinGW Makefiles" `
   -DCMAKE_BUILD_TYPE=Debug `
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-mingw32-make
+mingw32-make -j 
 
 .\chatter_client.exe

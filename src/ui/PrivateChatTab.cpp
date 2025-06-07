@@ -8,6 +8,8 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QDebug.h>
 #include "PrivateChatSession.h"
+#include "utils/UserInfo.h"
+#include "GlobalEventBus.h"
 
 PrivateChatTab::PrivateChatTab(ChatClient* client, const QString& username, const QString& nickname,
                                QWidget* parent)
@@ -79,6 +81,8 @@ void PrivateChatTab::connectSignals()
     connect(offlineUsersList, &QListWidget::itemDoubleClicked, this,
             &PrivateChatTab::handleUserSelected);
     connect(sessionList, &QListWidget::itemClicked, this, &PrivateChatTab::handleSessionSelected);
+    connect(GlobalEventBus::instance(), &GlobalEventBus::globalAppendMessage, this,
+            &PrivateChatTab::appendMessage);
 }
 
 void PrivateChatTab::handleUserSelected(QListWidgetItem* item)
@@ -141,11 +145,6 @@ PrivateChatSession* PrivateChatTab::getOrCreateSession(const QString& targetUser
     connect(session, &PrivateChatSession::sendMessageRequested, this,
             [=](const QString& target, const QString& content)
             { chatClient->sendPrivateMessage(target, content); });
-
-    connect(session, &PrivateChatSession::sendFileRequested, this,
-            [=](const QString& target, const QByteArray& content)
-            { chatClient->sendFile(target, content); });
-
     return session;
 }
 
@@ -161,23 +160,14 @@ PrivateChatSession* PrivateChatTab::getOrCreateSessionTwo(const QString& sender,
 }
 
 void PrivateChatTab::appendMessage(const QString& sender, const QString& receiver,
-                                   const QString& content, const QString& timestamp)
+                                   const QJsonValue& content, const QString& timestamp, bool isFile)
 {
-    qDebug() << "sender: " << sender << "receiver: " << receiver << " content: " << content;
+    qDebug() << " PrivateChatTab::appendMessage sender: " << sender << "receiver: " << receiver
+             << " content: " << content;
     PrivateChatSession* session = getOrCreateSessionTwo(sender, receiver);
     if (session)
     {  // 检查 session 非空
-        session->appendMessage(sender, receiver, content, timestamp);
-    }
-}
-
-void PrivateChatTab::handleFileReceived(const QString& sender, const QString& receiver,
-                                        const QByteArray& fileContent, const QString& timestamp)
-{
-    PrivateChatSession* session = getOrCreateSessionTwo(sender, receiver);
-    if (session)
-    {  // 检查 session 非空
-        session->handleFileReceived(sender, receiver, fileContent, timestamp);
+        session->appendMessage(sender, receiver, content, timestamp, isFile);
     }
 }
 

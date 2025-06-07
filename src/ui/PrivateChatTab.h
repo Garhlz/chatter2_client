@@ -18,11 +18,6 @@ class PrivateChatTab : public QWidget
    public:
     explicit PrivateChatTab(ChatClient* client, const QString& username, const QString& nickname,
                             QWidget* parent = nullptr);
-
-    void appendMessage(const QString& sender, const QString& receiver, const QString& content,
-                       const QString& timestamp);
-    void handleFileReceived(const QString& sender, const QString& receiver,
-                            const QByteArray& fileContent, const QString& timestamp);
     void addToOnlineList(const QJsonObject& userObj);
     void removeFromOnlineList(const QJsonObject& userObj);
     void addToOfflineList(const QJsonObject& userObj);
@@ -33,6 +28,9 @@ class PrivateChatTab : public QWidget
     int getOnlineNumber();
     int getOfflineNumber();
 
+   public slots:
+    void appendMessage(const QString& sender, const QString& receiver, const QJsonValue& content,
+        const QString& timestamp, bool isFile);
    private:
     void setupUi();
     void connectSignals();

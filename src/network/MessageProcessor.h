@@ -26,8 +26,9 @@ class MessageProcessor : public QObject
                                 const QString& content, qint64 messageId);
     void groupMessageReceived(const QString& sender, const QString& groupName,
                               const QString& content, qint64 messageId);
-    void fileReceived(const QString& sender, const QString& receiver, const QByteArray& fileContent,
-                      qint64 messageId);
+    // void fileReceived(const QString& sender, const QString& receiver, const QJsonObject& fileInfo,
+    //                   qint64 messageId, QString timestamp);
+    // 这里修改了, 使用事件总线进行发送
 
     // 系统信息信号
     void onlineUsersInit(const QJsonArray& users);

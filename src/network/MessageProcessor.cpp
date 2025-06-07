@@ -1,6 +1,7 @@
 #include "MessageProcessor.h"
 #include <QDebug>
-
+#include "utils/UserInfo.h"
+#include "GlobalEventBus.h"
 MessageProcessor::MessageProcessor(QObject* parent) : QObject(parent) {}
 
 bool MessageProcessor::processMessage(const QJsonObject& message, QString& currentToken,
@@ -121,6 +122,11 @@ void MessageProcessor::handleLoginMessage(const QJsonObject& message, QString& c
         QString nickname = message["nickname"].toString();
         QString cur_username = message["username"].toString();
 
+        UserInfo& userInfo = UserInfo::instance();
+        userInfo.setUsername(cur_username);
+        userInfo.setNickname(nickname);
+        userInfo.setToken(currentToken);
+
         qDebug() << "MessageProcessor: Login success, " << "username: " << cur_username
                  << ", nickname: " << nickname << ", token: " << currentToken;
 
@@ -157,7 +163,7 @@ void MessageProcessor::handleOnlineUser(const QJsonObject& message)
     }
 
     QJsonArray users = message["content"].toArray();
-    qDebug() << "Online users init: " << users << "count = " << users.count();
+    qDebug() << "Online users init, count: " << users.count();
     emit onlineUsersInit(users);
 }
 
@@ -171,7 +177,7 @@ void MessageProcessor::handleOfflineUser(const QJsonObject& message)
 
     QJsonArray users = message["content"].toArray();
     int count = users.size();
-    qDebug() << "Offline users init: " << users << "count = " << users.count();
+    qDebug() << "Offline users init. count: " << users.count();
     emit offlineUsersInit(users);
 }
 
@@ -255,17 +261,25 @@ void MessageProcessor::handleGroupChatMessage(const QJsonObject& message)
 void MessageProcessor::handleFileMessage(const QJsonObject& message)
 {
     if (!message.contains("username") || !message.contains("nickname") ||
-        !message.contains("receiver") || !message.contains("content"))
+        !message.contains("receiver") || !message.contains("content") ||
+        !message.contains("timestamp"))
     {
         emit errorOccurred("文件消息缺少内容");
         return;
     }
+
     qint64 messageId = message.contains("messageId") && !message["messageId"].isNull()
                            ? message["messageId"].toVariant().toLongLong()
                            : 0;
-    QByteArray fileContent = QByteArray::fromBase64(message["content"].toString().toLatin1());
-    emit fileReceived(message["username"].toString(), message["receiver"].toString(), fileContent,
-                      messageId);
+    // qt的键值对是QString:QJsonValue, 需要调用相应的方法转化, 这里是转化为QJsonObject
+
+    QString sender = message["username"].toString();
+    QString receiver = message["receiver"].toString();
+    QJsonObject fileInfo = message["content"].toObject();  // 假设文件元数据在 "fileInfo" 对象中
+    QString timestamp = message["timestamp"].toString();   // 时间戳作为字符串
+
+    // 通过事件总线发射信号，通知所有对文件消息感兴趣的组件
+    GlobalEventBus::instance()->globalAppendMessage(sender, receiver, fileInfo, timestamp, true);
 }
 
 void MessageProcessor::handleErrorMessage(const QJsonObject& message)

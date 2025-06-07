@@ -9,7 +9,8 @@
 #include <QScreen>
 #include <QStatusBar>
 #include <QVBoxLayout>
-
+#include "GlobalEventBus.h"
+#include <QJsonDocument>
 ChatWindow::ChatWindow(ChatClient* client, const QString& username, const QString& nickname,
                        QWidget* parent)
     : QMainWindow(parent),
@@ -156,7 +157,6 @@ void ChatWindow::connectSignals()
                 &ChatWindow::handlePrivateMessageReceived);
         connect(chatClient, &ChatClient::groupMessageReceived, this,
                 &ChatWindow::handleGroupMessageReceived);
-        connect(chatClient, &ChatClient::fileReceived, this, &ChatWindow::handleFileReceived);
 
         connect(chatClient, &ChatClient::onlineUsersInit, this, &ChatWindow::handleOnlineUsersInit);
         connect(chatClient, &ChatClient::offlineUsersInit, this,
@@ -216,7 +216,7 @@ void ChatWindow::handlePrivateMessageReceived(const QString& sender, const QStri
     }
     if (messageId > 0 && displayedMessages.contains(messageId)) return;
     QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-    privateChatTab->appendMessage(sender, receiver, content, timestamp);
+    privateChatTab->appendMessage(sender, receiver, content, timestamp, false);
     chatTabs->setCurrentWidget(privateChatTab);
     if (messageId > 0) displayedMessages.insert(messageId);
 }
@@ -233,20 +233,6 @@ void ChatWindow::handleGroupMessageReceived(const QString& sender, const QString
     QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
     groupChatTab->appendMessage(sender, QString("[%1] %2").arg(groupName).arg(content), timestamp);
     chatTabs->setCurrentWidget(groupChatTab);
-    if (messageId > 0) displayedMessages.insert(messageId);
-}
-
-void ChatWindow::handleFileReceived(const QString& sender, const QString& receiver,
-                                    const QByteArray& fileContent, qint64 messageId)
-{
-    if (!isInitialized)
-    {
-        qDebug() << "ChatWindow: Ignoring fileReceived before initialization";
-        return;
-    }
-    if (messageId > 0 && displayedMessages.contains(messageId)) return;
-    QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-    privateChatTab->handleFileReceived(sender, receiver, fileContent, timestamp);
     if (messageId > 0) displayedMessages.insert(messageId);
 }
 
@@ -306,12 +292,13 @@ void ChatWindow::handleGroupListReceived(const QJsonArray& groups)
 }
 
 void ChatWindow::handleHistoryMessagesReceived(const QJsonArray& messages)
-{  // 似乎所有类型都处理了
+{
     if (!isInitialized)
     {
         qDebug() << "ChatWindow: Ignoring historyMessagesReceived before initialization";
         return;
     }
+
     for (const QJsonValue& msg : messages)
     {
         if (!msg.isObject()) continue;
@@ -324,7 +311,14 @@ void ChatWindow::handleHistoryMessagesReceived(const QJsonArray& messages)
         QString type = message["type"].toString();
         QString sender = message["nickname"].toString();
         QString senderUsername = message["username"].toString();
-        QString content = message["content"].toString();
+
+        // 如果是文件信息直接放置文件的具体内容
+        QString content = "";
+        if (message["content"].isString() && type != "FILE")
+        {
+            content = message["content"].toString();
+        }
+
         qint64 messageId = message.contains("messageId") && !message["messageId"].isNull()
                                ? message["messageId"].toVariant().toLongLong()
                                : 0;
@@ -344,7 +338,7 @@ void ChatWindow::handleHistoryMessagesReceived(const QJsonArray& messages)
         else if (type == "PRIVATE_CHAT")
         {
             QString receiver = message["receiver"].toString();
-            privateChatTab->appendMessage(senderUsername, receiver, content, timestamp);
+            privateChatTab->appendMessage(senderUsername, receiver, content, timestamp, false);
         }
         else if (type == "GROUP_CHAT")
         {
@@ -356,8 +350,13 @@ void ChatWindow::handleHistoryMessagesReceived(const QJsonArray& messages)
         else if (type == "FILE")
         {
             QString receiver = message["receiver"].toString();
-            privateChatTab->appendMessage(sender, receiver, "[接收文件] " + content, timestamp);
+
+            // 这里的message本身就是后端的FileAttachment
+            QJsonDocument doc = QJsonDocument::fromJson(message["content"].toString().toUtf8());
+            QJsonObject fileInfo = doc.object();
+            privateChatTab->appendMessage(senderUsername, receiver, fileInfo, timestamp, true);
         }
+        // 其实最好还是不要用总线, 这里逻辑已经写好了...
 
         if (messageId > 0) displayedMessages.insert(messageId);
     }

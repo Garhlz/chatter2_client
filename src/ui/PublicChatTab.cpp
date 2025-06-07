@@ -68,6 +68,7 @@ void PublicChatTab::sendMessage()
     }
     chatClient->sendMessage(content);
     QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+    // 逻辑是在发送消息的时候, 直接添加到本地的聊天会话中
     appendMessage(nickname, content, timestamp);
     publicMessageInput->clear();
 }
@@ -94,8 +95,8 @@ void PublicChatTab::appendMessage(const QString& sender, const QString& content,
         }
     }
 
-    MessageBubble* bubble =
-        new MessageBubble("", sender, content, timestamp, sender == nickname, publicChatContainer);
+    MessageBubble* bubble = new MessageBubble("", sender, content, timestamp, sender == nickname,
+                                              false, publicChatContainer);
 
     // 不设置 SizePolicy，让气泡自然适应内容
     layout->addWidget(bubble, 0, sender == nickname ? Qt::AlignRight : Qt::AlignLeft);

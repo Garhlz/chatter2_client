@@ -11,6 +11,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Concurrent)
 
 set(PROJECT_SOURCES
     src/main.cpp
+    src/GlobalEventBus.cpp
+    src/GlobalEventBus.h
     src/ui/LoginWindow.cpp
     src/ui/LoginWindow.h
     src/ui/RegisterWindow.cpp
@@ -35,6 +37,12 @@ set(PROJECT_SOURCES
     src/utils/MessageHandler.h
     src/utils/JsonConverter.cpp
     src/utils/JsonConverter.h
+    src/utils/UserInfo.cpp
+    src/utils/UserInfo.h
+    src/utils/ConfigManager.cpp
+    src/utils/ConfigManager.h
+    src/FileTransferManager.cpp
+    src/FileTransferManager.h
     resources/resources.qrc
 )
 

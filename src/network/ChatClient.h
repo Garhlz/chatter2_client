@@ -24,7 +24,6 @@ class ChatClient : public QObject
     void sendMessage(const QString& content);
     void sendPrivateMessage(const QString& receiver, const QString& content);
     void sendGroupMessage(const QString& groupName, const QString& content);
-    void sendFile(const QString& receiver, const QByteArray& fileContent);
     void logout();
     void requestGroupList();
     QString getToken() const { return currentToken; }
@@ -39,8 +38,6 @@ class ChatClient : public QObject
                                 const QString& content, qint64 messageId);
     void groupMessageReceived(const QString& sender, const QString& groupName,
                               const QString& content, qint64 messageId);
-    void fileReceived(const QString& sender, const QString& receiver, const QByteArray& fileContent,
-                      qint64 messageId);
     void errorOccurred(const QString& error);
     void onlineUsersInit(const QJsonArray& users);
     void offlineUsersInit(const QJsonArray& users);
