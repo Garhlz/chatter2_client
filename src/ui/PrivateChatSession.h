@@ -26,6 +26,8 @@ class PrivateChatSession : public QWidget
 
     QString getTargetUser() const { return targetUsername; }
 
+   public slots:
+    void scrollToBottom();  // 新增的公共槽
    signals:
     void sendMessageRequested(const QString& targetUser, const QString& content);
 
@@ -56,6 +58,8 @@ class PrivateChatSession : public QWidget
     QString curNickname;
     QString targetUsername;
     QString targetNickname;
+
+    // 组件
     QScrollArea* privateChatDisplay;
     QWidget* privateChatContainer;
     QLineEdit* privateMessageInput;

@@ -68,6 +68,14 @@ bool MessageProcessor::processMessage(const QJsonObject& message, QString& curre
     {
         handleUserLogoutMessage(message);
     }
+    else if (type == "GROUP_INFO")
+    {
+        handleGroupInfo(message);
+    }
+    else if (type == "GROUP_RESPONSE")
+    {
+        handleGroupResponse(message);
+    }
     else
     {
         emit errorOccurred(QString("未知消息类型: %1").arg(type));
@@ -112,24 +120,28 @@ void MessageProcessor::handleLoginMessage(const QJsonObject& message, QString& c
     if (status == "success")
     {
         if (!message.contains("token") || !message.contains("nickname") ||
-            !message.contains("username") || message["token"].toString().isEmpty() ||
-            message["nickname"].toString().isEmpty() || message["username"].toString().isEmpty())
+            !message.contains("userId") || !message.contains("username") ||
+            message["token"].toString().isEmpty() || message["nickname"].toString().isEmpty() ||
+            message["username"].toString().isEmpty())
         {
             emit errorOccurred("登录消息缺少有效的 token 或 nickname 或 username");
             return;
         }
         currentToken = message["token"].toString();
+        long userId = message["userId"].toVariant().toLongLong();
         QString nickname = message["nickname"].toString();
         QString cur_username = message["username"].toString();
 
         UserInfo& userInfo = UserInfo::instance();
+        userInfo.setUserId(userId);
         userInfo.setUsername(cur_username);
         userInfo.setNickname(nickname);
         userInfo.setToken(currentToken);
-
+        // 问题在于这里没有返回userId, 导致userid是空的
         qDebug() << "MessageProcessor: Login success, " << "username: " << cur_username
                  << ", nickname: " << nickname << ", token: " << currentToken;
-
+        qDebug() << "init user info: " << userId << " " << cur_username << " " << nickname << " "
+                 << currentToken;
         emit loginSuccess(cur_username, nickname);
         heartbeatActive = true;
     }
@@ -163,9 +175,11 @@ void MessageProcessor::handleOnlineUser(const QJsonObject& message)
     }
 
     QJsonArray users = message["content"].toArray();
+    // qDebug() << "receive online list: " << users;
     qDebug() << "Online users init, count: " << users.count();
     emit onlineUsersInit(users);
 }
+// 注意自己也算是在线用户的, 理论上这里应该添加的
 
 void MessageProcessor::handleOfflineUser(const QJsonObject& message)
 {
@@ -177,6 +191,7 @@ void MessageProcessor::handleOfflineUser(const QJsonObject& message)
 
     QJsonArray users = message["content"].toArray();
     int count = users.size();
+    // qDebug() << "receive offline list: " << users;
     qDebug() << "Offline users init. count: " << users.count();
     emit offlineUsersInit(users);
 }
@@ -189,6 +204,7 @@ void MessageProcessor::handleUserLoginMessage(const QJsonObject& message)
         return;
     }
     QJsonObject LoginUser = message["content"].toObject();
+    qDebug() << "user log in: " << LoginUser;
     emit someoneLogin(LoginUser);
 }
 
@@ -200,6 +216,7 @@ void MessageProcessor::handleUserLogoutMessage(const QJsonObject& message)
         return;
     }
     QJsonObject LogoutUser = message["content"].toObject();
+    qDebug() << "user logout: " << LogoutUser;
     emit someoneLogout(LogoutUser);
 }
 
@@ -212,6 +229,7 @@ void MessageProcessor::handleHistoryMessages(const QJsonObject& message)
     }
     QJsonArray messages = message["content"].toArray();
     qDebug() << "History received successfully, number = " << messages.size();
+    // qDebug() << "history content: " << messages;
     emit historyMessagesReceived(messages);
 }
 
@@ -245,17 +263,30 @@ void MessageProcessor::handlePrivateChatMessage(const QJsonObject& message)
 
 void MessageProcessor::handleGroupChatMessage(const QJsonObject& message)
 {
-    if (!message.contains("nickname") || !message.contains("groupName") ||
+    if (!message.contains("nickname") || !message.contains("groupId") ||
         !message.contains("content"))
     {
-        emit errorOccurred("群聊消息缺少 nickname, groupName 或 content");
+        emit errorOccurred("群聊消息缺少 nickname, groupId 或 content");
         return;
     }
+    // todo longlong类型都应该这样修改
     qint64 messageId = message.contains("messageId") && !message["messageId"].isNull()
                            ? message["messageId"].toVariant().toLongLong()
                            : 0;
-    emit groupMessageReceived(message["nickname"].toString(), message["groupName"].toString(),
-                              message["content"].toString(), messageId);
+
+    QString senderUsername = message["username"].toString();
+    QString senderNickname = message["nickname"].toString();
+
+    long groupId = message["groupId"].toVariant().toLongLong();
+    QString content = message["content"].toString();
+
+    QString timestamp = message.contains("timestamp") && !message["timestamp"].isNull()
+                            ? QDateTime::fromString(message["timestamp"].toString(), Qt::ISODate)
+                                  .toString("hh:mm:ss")
+                            : QDateTime::currentDateTime().toString("hh:mm:ss");
+
+    GlobalEventBus::instance()->appendGroupMessage(senderUsername, senderNickname, groupId, content,
+                                                   timestamp);
 }
 
 void MessageProcessor::handleFileMessage(const QJsonObject& message)
@@ -288,4 +319,77 @@ void MessageProcessor::handleErrorMessage(const QJsonObject& message)
                         ? message["errorMessage"].toString()
                         : "服务器错误";
     emit errorOccurred(error);
+}
+
+void MessageProcessor::handleGroupInfo(const QJsonObject& message)  // 没有处理完
+{
+    if (!message.contains("content"))
+    {
+        emit errorOccurred("群组信息 消息缺少内容");
+        return;
+    }
+
+    if (!message["content"].isArray())
+    {
+        emit errorOccurred("群组信息 消息类型错误");
+        return;
+    }
+
+    qDebug() << "receive group info: " << message["content"];
+    GlobalEventBus::instance()->sendGroupInfo(message["content"]);
+}
+
+// 新增
+void MessageProcessor::handleGroupResponse(const QJsonObject& message)  // 没有处理完
+{
+    if (!message.contains("content"))
+    {
+        emit errorOccurred("群组回复 消息缺少内容");
+        return;
+    }
+    // 这里先处理不同的回复, 判断是否成功, 然后调用不同的总线信号发送回去
+
+    QString status = message["status"].toString();
+    QJsonObject content = message["content"].toObject();
+    QString operationId = content["operationId"].toString();
+    qDebug() << "receive group reponse: " << message["content"] << " status: " << status;
+    if (status == "success")
+    {
+        GroupTask* task = groupTaskMap.value(operationId);
+        QString taskType = task->getType();
+        qDebug() << "type: " << taskType;
+        if (taskType == "GROUP_CREATE")
+        {
+            long groupId = content["groupId"].toVariant().toLongLong();
+            QString groupName = content["groupName"].toString();
+            long creatorId = content["creatorId"].toVariant().toLongLong();
+            GlobalEventBus::instance()->sendGroupCreate(groupId, groupName, creatorId);
+        }
+        else if (taskType == "GROUP_DELETE")
+        {
+            long groupId = content["groupId"].toVariant().toLongLong();
+            GlobalEventBus::instance()->sendGroupDelete(groupId);
+        }
+        else if (taskType == "GROUP_ADD")
+        {
+            long userId = content["userId"].toVariant().toLongLong();
+            long groupId = content["groupId"].toVariant().toLongLong();
+            GlobalEventBus::instance()->sendGroupAdd(userId, groupId);
+        }
+        else if (taskType == "GROUP_REMOVE")
+        {
+            long userId = content["userId"].toVariant().toLongLong();
+            long groupId = content["groupId"].toVariant().toLongLong();
+            GlobalEventBus::instance()->sendGroupRemove(userId, groupId);
+        }
+    }
+    else
+    {
+        qDebug() << "Group task reponse error, content: " << content;
+    }
+}
+
+void MessageProcessor::insert(const QString& operationId, GroupTask* task)
+{
+    groupTaskMap.insert(operationId, task);
 }

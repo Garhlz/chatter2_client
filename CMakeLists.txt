@@ -29,6 +29,8 @@ set(PROJECT_SOURCES
     src/ui/PrivateChatSession.h
     src/ui/GroupChatTab.cpp
     src/ui/GroupChatTab.h
+    src/ui/GroupChatSession.cpp
+    src/ui/GroupChatSession.h
     src/network/ChatClient.cpp
     src/network/ChatClient.h
     src/network/MessageProcessor.cpp
@@ -41,8 +43,15 @@ set(PROJECT_SOURCES
     src/utils/UserInfo.h
     src/utils/ConfigManager.cpp
     src/utils/ConfigManager.h
+    src/utils/GroupTask.cpp
+    src/utils/GroupTask.h
     src/FileTransferManager.cpp
     src/FileTransferManager.h
+    src/dialogs/UserSelectionDialog.cpp
+    src/dialogs/UserSelectionDialog.h
+    src/utils/User.h
+    src/utils/UserManager.cpp
+    src/utils/UserManager.h 
     resources/resources.qrc
 )
 

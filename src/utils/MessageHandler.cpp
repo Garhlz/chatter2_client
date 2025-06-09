@@ -1,5 +1,6 @@
 #include "MessageHandler.h"
-
+#include "utils/GroupTask.h"
+#include "utils/UserInfo.h"
 QJsonObject MessageHandler::createLoginMessage(const QString& username, const QString& password)
 {
     QJsonObject message;
@@ -41,14 +42,34 @@ QJsonObject MessageHandler::createPrivateChatMessage(const QString& receiver,
     return message;
 }
 
-QJsonObject MessageHandler::createGroupChatMessage(const QString& groupName, const QString& content,
-                                                   const QString& token)
+QJsonObject MessageHandler::createGroupChatMessage(long userId, const QString& username,
+                                                   const QString& nickname, long groupId,
+                                                   const QString& content)
 {
     QJsonObject message;
     message["type"] = "GROUP_CHAT";
-    message["groupName"] = groupName;
+    message["userId"] = static_cast<qint64>(userId);  // 明确转换为 qint64
+    message["username"] = username;
+    message["nickname"] = nickname;
+    message["groupId"] = static_cast<qint64>(groupId);  // 明确转换为 qint64
     message["content"] = content;
-    message["token"] = token;
+    message["token"] = UserInfo::instance().token();
+    return message;
+}
+
+QJsonObject MessageHandler::createGroupTask(const GroupTask* task)
+{
+    QJsonObject message;
+    message["type"] = task->getType();
+    QJsonObject content;
+    content["operationId"] = task->getOperationId();
+    content["operatorId"] = static_cast<qint64>(task->getOperatorId());  // 明确转换为 qint64
+    content["groupId"] = static_cast<qint64>(task->getGroupId());        // 明确转换为 qint64
+    content["userId"] = static_cast<qint64>(task->getUserId());          // 明确转换为 qint64
+    content["groupName"] = task->getGroupName();
+
+    message["content"] = content;
+    message["token"] = UserInfo::instance().token();
     return message;
 }
 

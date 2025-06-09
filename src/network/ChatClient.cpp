@@ -3,6 +3,7 @@
 #include "utils/MessageHandler.h"
 #include "utils/UserInfo.h"
 #include <QDebug>
+#include "GlobalEventBus.h"
 
 ChatClient::ChatClient(QObject* parent) : QObject(parent)
 {
@@ -22,9 +23,6 @@ ChatClient::ChatClient(QObject* parent) : QObject(parent)
             &ChatClient::privateMessageReceived);
     // 实际上后者也是一个信号, 相当于发出了信号的连锁反应
     // 这样改动松耦合, 不改变chatclient和外界的接口
-    connect(messageProcessor, &MessageProcessor::groupMessageReceived, this,
-            &ChatClient::groupMessageReceived);
-
 
     connect(messageProcessor, &MessageProcessor::onlineUsersInit, this,
             &ChatClient::onlineUsersInit);
@@ -44,6 +42,13 @@ ChatClient::ChatClient(QObject* parent) : QObject(parent)
     connect(socket, &QAbstractSocket::errorOccurred, this, &ChatClient::handleSocketError);
     connect(heartbeatTimer, &QTimer::timeout, this, &ChatClient::sendHeartbeat);
     connect(reconnectTimer, &QTimer::timeout, this, &ChatClient::tryReconnect);
+
+    // 新增事件总线, 发送群聊消息
+    connect(GlobalEventBus::instance(), &GlobalEventBus::sendGroupMessage, this,
+            &ChatClient::sendGroupMessage);
+
+    connect(GlobalEventBus::instance(), &GlobalEventBus::taskSubmitted, this,
+            &ChatClient::sendGroupTask);
 }
 
 ChatClient::~ChatClient()
@@ -97,12 +102,21 @@ void ChatClient::sendPrivateMessage(const QString& receiver, const QString& cont
     sendJsonMessage(MessageHandler::createPrivateChatMessage(receiver, content, currentToken));
 }
 
-void ChatClient::sendGroupMessage(const QString& groupName, const QString& content)
+// change
+void ChatClient::sendGroupMessage(long groupId, const QString& content)
 {
-    sendJsonMessage(MessageHandler::createGroupChatMessage(groupName, content, currentToken));
+    sendJsonMessage(MessageHandler::createGroupChatMessage(
+        UserInfo::instance().userId(), UserInfo::instance().username(),
+        UserInfo::instance().nickname(), groupId, content));
 }
 
-
+// 新增
+void ChatClient::sendGroupTask(GroupTask* task)
+{
+    // 在messageProcessor中管理任务列表, 这里也是调用其方法, 非常合理
+    messageProcessor->insert(task->getOperationId(), task);
+    sendJsonMessage(MessageHandler::createGroupTask(task));
+}
 
 void ChatClient::logout()
 {
@@ -185,6 +199,7 @@ void ChatClient::tryReconnect()
     }
 }
 
+// todo 后续可能修改读写方式
 void ChatClient::sendJsonMessage(const QJsonObject& message)
 {
     QJsonDocument doc(message);

@@ -223,18 +223,6 @@ QSplitter::handle:horizontal {
     background: #FFF0F5;
 }
 
-/* Group Combo */
-#groupCombo {
-    padding: 12px;
-    border: 1px solid #FFE4EC;
-    border-radius: 8px;
-    background: #FFF5F8;
-    font-size: 14px;
-}
-
-#groupCombo:focus {
-    border-color: #F06292;
-}
 
 /* Status Bar */
 QStatusBar {
@@ -320,6 +308,7 @@ QScrollBar:horizontal {
     color: #7B61FF;
     padding: 2px 8px;
     margin: 0;
+    
 }
 
 #nicknameLabel[own="true"] {
@@ -333,10 +322,12 @@ QScrollBar:horizontal {
     font-size: 11px;
     padding: 2px 8px;
     margin: 0;
+    background: transparent;
 }
 
 #timeLabel[own="true"] {
     text-align: right;
+    background: transparent;
 }
 
 /* Content (普通消息) */
@@ -362,15 +353,12 @@ QScrollBar:horizontal {
 
 /* 文件消息特定样式 */
 #contentLabel[file="true"] {
-    color: #1E90FF;
+    background: #f5f0f0;
     text-decoration: underline;
-    padding: 8px 12px;
-    background: #F5F5F5; /* 轻灰色背景区分文件消息 */
-    border: 1px solid #D3D3D3; /* 边框增强区分 */
+    color: #4da3f9;
 }
 
 #contentLabel[file="true"][own="true"] {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFF0F5, stop:1 #FFE4E1); /* 浅粉色渐变 */
     border-top-right-radius: 4px;
 }
 
@@ -391,6 +379,11 @@ QProgressBar {
     margin: 4px 8px;
 }
 
+QProgressBar[visible="false"]{ /* 或者 QProgressBar[visible="false"] */
+    background-color: transparent;
+    border: none; /* 如果不需要边框也可以移除 */
+}
+
 QProgressBar::chunk {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #7B61FF, stop:1 #9C80FF);
     border-radius: 5px;
@@ -403,7 +396,7 @@ QProgressBar::chunk {
     padding: 2px 8px;
     margin: 0 8px;
 }
-/* todo 但愿修改没有问题 */
+
 
 QWidget#PrivateChatTab {
     background: #FFF5F8;
@@ -445,37 +438,223 @@ QPushButton[objectName^="privateSendButton"]:hover, QPushButton[objectName^="sen
     background: #B196FF;
 }
 
+
+/* 统一在线/离线用户列表项的基础样式 */
+/* 用户和会话 */
+
+/* 尝试更通用的方式移除焦点框 */
+QAbstractItemView::item:focus {
+    outline: none;
+    border: none;
+}
+
+/* 再次确保针对你的特定 QListWidget */
+#onlineUsersList::item:focus,
+#offlineUsersList::item:focus,
+#sessionList::item:focus {
+    outline: none;
+    border: none;
+}
+
+/* 如果你的 QListWidget 本身也有焦点框，也可以尝试移除 */
+QListWidget:focus {
+    outline: none;
+    border: none;
+}
+#onlineUsersList:focus,
+#offlineUsersList:focus,
+#sessionList:focus {
+    outline: none;
+    border: none;
+}
+
+/* 统一在线/离线用户列表项的基础样式 */
 #onlineUsersList::item, #offlineUsersList::item {
     padding: 12px;
     border-radius: 6px;
     margin: 6px;
+    background: transparent;
+    color: #333333;
 }
 
+/* 优化在线/离线用户列表项的选中状态 */
+#onlineUsersList::item:selected, #offlineUsersList::item:selected {
+    background: #E0E0FF;
+    color: #7B61FF;
+    font-weight: bold;
+    border: 1px solid #7B61FF;
+}
+
+
+/* --- 会话列表 --- */
 #sessionList {
     border: 1px solid #FFE4EC;
     border-radius: 10px;
     background: #FFFFFF;
     padding: 10px;
 }
+
 #sessionList::item {
-    background: #FFE4EC;
-    padding: 14px 30px;
-    border: 1px solid #FFB1C8;
-    border-radius: 10px;
+    background: #FFF0F5; /* 浅粉色背景，作为非选中状态 */
+    padding: 12px;
+    border-radius: 6px;
     margin: 6px;
     font-size: 14px;
     color: #7B61FF;
 }
+
 #sessionList::item:selected {
-    background: #FFFFFF;
-    color: #F06292;
+    /* 采用玫红渐变作为选中背景，文字白色 */
+    background: #FFB1C8;
+    color: #FFFFFF;
     font-weight: bold;
-    border: 1px solid #F06292;
+    border: 1px solid transparent; /* 边框透明，与背景融合 */
 }
-#sessionList::item:hover {
-    background: #FFF0F5;
+
+#sessionList::item:hover{
+    background: #FFE4EC;
 }
+
 #sessionStack {
     background: #FFFFFF;
     border-radius: 12px;
+    border: 1px solid #FFE4EC;
+}
+
+
+/* 新增的群组页面的样式 */
+
+/* GroupChatTab 样式 */
+QWidget#GroupChatTab {
+    background: #FFF5F8; /* 浅粉色背景，与ChatWindow保持一致 */
+}
+
+/* 左侧群组列表 (QListWidget) */
+QListWidget#groupList {
+    border: 1px solid #FFE4EC; /* 浅粉色边框 */
+    border-radius: 10px;
+    background: #FFFFFF; /* 白色背景，提升清晰度 */
+    padding: 10px;
+}
+
+#groupList::item {
+    padding: 12px;
+    border-radius: 6px;
+    margin: 6px;
+    background: #FFF0F5; /* 更柔和的浅粉色背景（非选中状态） */
+    color: #7B61FF; /* 紫色文字 */
+    font-size: 14px;
+}
+
+#groupList::item:selected {
+    background: #FFB1C8; /* 单色浅粉色背景，替换渐变以提高文字对比度 */
+    color: #FFFFFF; /* 白色文字，确保高对比度 */
+    font-weight: bold;
+    border: 1px solid transparent; /* 无边框，与背景融合 */
+}
+
+#groupList::item:hover {
+    background: #FFE4EC; /* 悬浮时使用稍深的浅粉色，减少突兀感 */
+}
+
+#groupList:focus {
+    outline: none;
+    border: none; /* 移除焦点框 */
+}
+
+/* 群聊内容堆栈 (QStackedWidget) */
+QStackedWidget#groupContentStack {
+    background: #FFFFFF; /* 白色背景，与其他聊天容器一致 */
+    border-radius: 12px;
+    border: 1px solid #FFE4EC; /* 浅粉色边框 */
+}
+
+/* 右侧群聊操作按钮 */
+QPushButton#newGroupButton, 
+QPushButton#deleteGroupButton, 
+QPushButton#addMemberButton, 
+QPushButton#removeMemberButton {
+    padding: 12px 20px;
+    border-radius: 8px;
+    background: #B196FF; /* 更柔和的浅紫色背景，替换深紫色#7B61FF */
+    color: #FFFFFF; /* 白色文字 */
+    font-weight: 600;
+    border: none;
+    min-width: 120px; /* 保持较宽的按钮，便于点击 */
+}
+
+QPushButton#newGroupButton:hover, 
+QPushButton#deleteGroupButton:hover, 
+QPushButton#addMemberButton:hover, 
+QPushButton#removeMemberButton:hover {
+    background: #C8B1FF; /* 悬浮时更亮的浅紫色，保持可爱风格 */
+}
+
+/* GroupChatSession 样式 */
+QWidget[objectName^="groupChatContainer"] {
+    background: #FFFFFF; /* 白色背景，聊天容器 */
+    border-radius: 12px;
+    padding: 10px;
+}
+
+QScrollArea[objectName^="groupChatDisplay"] {
+    border: none;
+    background: transparent;
+    margin: 0;
+}
+
+/* 群聊消息输入框 */
+QLineEdit[objectName^="groupMessageInput"] { /* 使用*=匹配包含groupMessageInput_的objectName */
+    padding: 12px;
+    border: 1px solid #FFE4EC; /* 浅粉色边框 */
+    border-radius: 8px;
+    background: #FFF5F8; /* 浅粉色背景 */
+    font-size: 14px;
+}
+
+QLineEdit[objectName^="groupMessageInput"]:focus {
+    border-color: #F06292; /* 聚焦时使用鲜艳粉色边框 */
+}
+
+/* 群聊发送按钮 */
+QPushButton[objectName^="groupSendButton"] { /* 使用*=匹配包含groupSendButton_的objectName */
+    padding: 12px 20px;
+    border-radius: 8px;
+    background: #5782df; /* 蓝色背景，与其他发送按钮一致 */
+    color: #FFFFFF;
+    font-weight: 600;
+    border: none;
+    min-width: 80px;
+}
+
+QPushButton[objectName^="groupSendButton"]:hover {
+    background: #B196FF; /* 悬浮时浅紫色，与其他按钮一致 */
+}
+
+/* 群聊显示区域滚动条 */
+QScrollArea[objectName^="groupChatDisplay"] QScrollBar:vertical {
+    border: none;
+    background: #FFF5F8; /* 浅粉色滚动条背景 */
+    width: 8px;
+    margin: 0;
+}
+
+QScrollArea[objectName^="groupChatDisplay"] QScrollBar::handle:vertical {
+    background: #FFB1C8; /* 粉色滚动条手柄 */
+    border-radius: 4px;
+    min-height: 40px;
+}
+
+QScrollArea[objectName^="groupChatDisplay"] QScrollBar::handle:vertical:hover {
+    background: #F06292; /* 悬浮时鲜艳粉色 */
+}
+
+QScrollArea[objectName^="groupChatDisplay"] QScrollBar::add-page:vertical, 
+QScrollArea[objectName^="groupChatDisplay"] QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollArea[objectName^="groupChatDisplay"] QScrollBar::add-line:vertical, 
+QScrollArea[objectName^="groupChatDisplay"] QScrollBar::sub-line:vertical {
+    height: 0px;
 }

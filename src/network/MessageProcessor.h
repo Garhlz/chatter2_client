@@ -6,6 +6,8 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QString>
+#include <QMap>
+#include "utils/GroupTask.h"
 class MessageProcessor : public QObject
 {
     Q_OBJECT
@@ -15,7 +17,7 @@ class MessageProcessor : public QObject
 
     // 处理消息，返回是否成功，更新 token 和心跳状态
     bool processMessage(const QJsonObject& message, QString& currentToken, bool& heartbeatActive);
-
+    void insert(const QString& operationId, GroupTask* task);
    signals:
     // 注册和登录信号
     void registerSuccess(const QString& token);
@@ -24,12 +26,9 @@ class MessageProcessor : public QObject
     void messageReceived(const QString& sender, const QString& content, qint64 messageId);
     void privateMessageReceived(const QString& sender, const QString& receiver,
                                 const QString& content, qint64 messageId);
-    void groupMessageReceived(const QString& sender, const QString& groupName,
-                              const QString& content, qint64 messageId);
-    // void fileReceived(const QString& sender, const QString& receiver, const QJsonObject& fileInfo,
-    //                   qint64 messageId, QString timestamp);
-    // 这里修改了, 使用事件总线进行发送
 
+    // 新增
+    void groupResponseReceived(const QJsonValue& message);
     // 系统信息信号
     void onlineUsersInit(const QJsonArray& users);
     void offlineUsersInit(const QJsonArray& users);
@@ -55,6 +54,10 @@ class MessageProcessor : public QObject
     void handleHistoryMessages(const QJsonObject& message);
     void handleUserLoginMessage(const QJsonObject& message);
     void handleUserLogoutMessage(const QJsonObject& message);
+    void handleGroupInfo(const QJsonObject& message);
+    void handleGroupResponse(const QJsonObject& message);
+
+    QMap<QString, GroupTask*> groupTaskMap;
 };
 
 #endif  // MESSAGEPROCESSOR_H

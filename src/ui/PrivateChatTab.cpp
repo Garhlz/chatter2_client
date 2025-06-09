@@ -1,3 +1,4 @@
+// ui/PrivateChatTab.cpp
 #include "PrivateChatTab.h"
 #include <QDateTime>
 #include <QHBoxLayout>
@@ -6,17 +7,32 @@
 #include <QScrollBar>
 #include <QStackedWidget>
 #include <QtConcurrent/QtConcurrent>
-#include <QDebug.h>
+#include <QDebug>
+
 #include "PrivateChatSession.h"
-#include "utils/UserInfo.h"
 #include "GlobalEventBus.h"
+#include "network/ChatClient.h"
+
+// 定义列表项数据角色
+enum UserListItemDataRole
+{
+    UsernameRole = Qt::UserRole,       // 存储用户的username (QString)
+    UserIdRole = Qt::UserRole + 1,     // 存储用户的user_id (long)
+    UserStatusRole = Qt::UserRole + 2  // 存储用户的状态 (int, 对应User::UserStatus)
+};
 
 PrivateChatTab::PrivateChatTab(ChatClient* client, const QString& username, const QString& nickname,
-                               QWidget* parent)
-    : QWidget(parent), chatClient(client), curUsername(username), curNickname(nickname)
+                               UserManager* userManager_, QWidget* parent)
+    : QWidget(parent),
+      chatClient(client),
+      curUsername(username),
+      curNickname(nickname),
+      userManager(userManager_)  // 初始化userManager成员
 {
     setupUi();
     connectSignals();
+
+    // 初始时不需要调用 refreshUserLists(); 等待 usersInitialized 信号
 }
 
 void PrivateChatTab::setupUi()
@@ -76,27 +92,41 @@ void PrivateChatTab::connectSignals()
 {
     connect(onlineUsersList, &QListWidget::itemClicked, this, &PrivateChatTab::handleUserSelected);
     connect(offlineUsersList, &QListWidget::itemClicked, this, &PrivateChatTab::handleUserSelected);
+
     connect(onlineUsersList, &QListWidget::itemDoubleClicked, this,
             &PrivateChatTab::handleUserSelected);
     connect(offlineUsersList, &QListWidget::itemDoubleClicked, this,
             &PrivateChatTab::handleUserSelected);
+
     connect(sessionList, &QListWidget::itemClicked, this, &PrivateChatTab::handleSessionSelected);
     connect(GlobalEventBus::instance(), &GlobalEventBus::globalAppendMessage, this,
             &PrivateChatTab::appendMessage);
+
+    // **连接 UserManager 的信号**
+    connect(userManager, &UserManager::usersInitialized, this, &PrivateChatTab::onUsersInitialized);
+    connect(userManager, &UserManager::userStatusChanged, this,
+            &PrivateChatTab::onUserStatusChanged);
+    connect(userManager, &UserManager::userAdded, this, &PrivateChatTab::onUserAdded);
 }
 
 void PrivateChatTab::handleUserSelected(QListWidgetItem* item)
 {
     if (!item) return;
-    QString targetUser = item->data(Qt::UserRole).toString();
-    qDebug() << "选中 user: " << targetUser;
-    PrivateChatSession* session = getOrCreateSession(targetUser);
+    QString targetUsername = item->data(UsernameRole).toString();
+
+    QListWidgetItem* currentSessionItem = sessionList->currentItem();
+    if (currentSessionItem && currentSessionItem->data(UsernameRole).toString() == targetUsername)
+    {
+        return;
+    }
+    PrivateChatSession* session = getOrCreateSession(targetUsername);
+
     if (session)
-    {  // 检查 session 非空
-        sessionStack->setCurrentWidget(session);
+    {
+        session->scrollToBottom();
         for (int i = 0; i < sessionList->count(); ++i)
         {
-            if (sessionList->item(i)->data(Qt::UserRole).toString() == targetUser)
+            if (sessionList->item(i)->data(UsernameRole).toString() == targetUsername)
             {
                 sessionList->setCurrentItem(sessionList->item(i));
                 break;
@@ -108,39 +138,51 @@ void PrivateChatTab::handleUserSelected(QListWidgetItem* item)
 void PrivateChatTab::handleSessionSelected(QListWidgetItem* item)
 {
     if (!item) return;
-    QString targetUser = item->data(Qt::UserRole).toString();
-    PrivateChatSession* session = sessions.value(targetUser, nullptr);
+    QString targetUsername = item->data(UsernameRole).toString();
+
+    PrivateChatSession* session = sessions.value(targetUsername, nullptr);
+
     if (session)
     {
         sessionStack->setCurrentWidget(session);
+        session->scrollToBottom();
     }
 }
 
-PrivateChatSession* PrivateChatTab::getOrCreateSession(const QString& targetUser)
+PrivateChatSession* PrivateChatTab::getOrCreateSession(const QString& targetUsername)
 {
-    if (targetUser == curUsername)
-    {  // 过滤当前用户
-        qDebug() << "不能与自己创建会话: " << targetUser;
+    if (targetUsername == curUsername)
+    {
+        qDebug() << "不能与自己创建会话: " << targetUsername;
         return nullptr;
     }
-    if (sessions.contains(targetUser))
+    if (sessions.contains(targetUsername))
     {
-        return sessions[targetUser];
+        return sessions[targetUsername];
     }
-    QString targetNickname = allUsers[targetUser]["nickname"].toString();
+    // 从UserManager获取用户信息
+    User* targetUser = userManager->getUserByUsername(targetUsername);
+    if (!targetUser)
+    {
+        qWarning() << "无法找到用户: " << targetUsername << "来创建会话。";
+        return nullptr;
+    }
+    QString targetNickname = targetUser->getNickname();
 
     PrivateChatSession* session = new PrivateChatSession(chatClient, curUsername, curNickname,
-                                                         targetUser, targetNickname, this);
-    sessions[targetUser] = session;
+                                                         targetUsername, targetNickname, this);
+    sessions[targetUsername] = session;
 
     sessionStack->addWidget(session);
 
-    QString displayText = targetNickname.isEmpty() ? targetUser : targetNickname;
+    QString displayText = targetNickname.isEmpty() ? targetUsername : targetNickname;
     QListWidgetItem* item = new QListWidgetItem(displayText);
-    item->setData(Qt::UserRole, targetUser);
+    item->setData(UsernameRole, targetUsername);  // 存储username
     sessionList->addItem(item);
     sessionList->setCurrentItem(item);
+
     sessionStack->setCurrentWidget(session);
+    session->scrollToBottom();
 
     connect(session, &PrivateChatSession::sendMessageRequested, this,
             [=](const QString& target, const QString& content)
@@ -151,181 +193,142 @@ PrivateChatSession* PrivateChatTab::getOrCreateSession(const QString& targetUser
 PrivateChatSession* PrivateChatTab::getOrCreateSessionTwo(const QString& sender,
                                                           const QString& receiver)
 {
-    QString targetUser;
+    QString targetUsername;
     if (sender == curUsername)
-        targetUser = receiver;
+        targetUsername = receiver;
     else
-        targetUser = sender;
-    return getOrCreateSession(targetUser);
+        targetUsername = sender;
+    return getOrCreateSession(targetUsername);
 }
 
 void PrivateChatTab::appendMessage(const QString& sender, const QString& receiver,
                                    const QJsonValue& content, const QString& timestamp, bool isFile)
 {
-    qDebug() << " PrivateChatTab::appendMessage sender: " << sender << "receiver: " << receiver
-             << " content: " << content;
     PrivateChatSession* session = getOrCreateSessionTwo(sender, receiver);
     if (session)
-    {  // 检查 session 非空
+    {
         session->appendMessage(sender, receiver, content, timestamp, isFile);
     }
 }
 
-void PrivateChatTab::addToOnlineList(const QJsonObject& userObj)
+// 辅助函数：将用户添加到在线/离线列表 UI
+void PrivateChatTab::addUserToListUI(User* user)
 {
-    QString username = userObj["username"].toString();
-    QString nickname = userObj["nickname"].toString();
-    QString displayText = QString("%1 (%2)").arg(nickname).arg(username);
-    QListWidgetItem* item = new QListWidgetItem(displayText);
-    item->setData(Qt::UserRole, username);
-    qDebug() << "add online users: " << item << " data: " << item->data(Qt::UserRole).toString();
-    onlineUsersList->addItem(item);
-}
+    if (!user) return;
 
-void PrivateChatTab::removeFromOnlineList(const QJsonObject& userObj)
-{
-    if (!userObj.contains("username"))
+    QListWidget* targetList = nullptr;
+    switch (user->getStatus())
     {
-        qDebug() << "removeFromOnlineList: Missing username in userObj";
-        return;
+        case User::Online:
+            targetList = onlineUsersList;
+            break;
+        case User::Offline:
+            targetList = offlineUsersList;
+            break;
+        case User::Busy:
+            targetList = onlineUsersList;  // 假设忙碌用户也显示在在线列表，可以根据需求调整
+            qDebug() << "User " << user->getUsername() << " is busy.";
+            break;
+        default:
+            return;  // 未知状态不处理
     }
 
-    QString username = userObj["username"].toString();
-    for (int i = 0; i < onlineUsersList->count(); ++i)
+    if (!targetList) return;
+
+    // 检查是否已存在，防止重复添加
+    for (int i = 0; i < targetList->count(); ++i)
     {
-        QListWidgetItem* item = onlineUsersList->item(i);
-        if (item->data(Qt::UserRole).toString() == username)
+        if (targetList->item(i)->data(UserIdRole).toLongLong() == user->getUserId())
         {
-            qDebug() << "Removing from online users: " << username;
-            delete onlineUsersList->takeItem(i);
+            return;  // 已经存在，不重复添加
+        }
+    }
+
+    QString displayText = QString("%1 (%2)").arg(user->getNickname()).arg(user->getUsername());
+    QListWidgetItem* item = new QListWidgetItem(displayText, targetList);
+    item->setData(UsernameRole, user->getUsername());                    // 存储username
+    item->setData(UserIdRole, static_cast<qint64>(user->getUserId()));   // 存储user_id
+    item->setData(UserStatusRole, static_cast<int>(user->getStatus()));  // 存储状态
+
+    // 根据状态设置颜色或图标
+    switch (user->getStatus())
+    {
+        case User::Online:
+            item->setForeground(QColor(Qt::darkGreen));
             break;
+        case User::Offline:
+            item->setForeground(QColor(Qt::gray));
+            break;
+        case User::Busy:
+            item->setForeground(QColor(Qt::darkYellow));
+            break;  // 忙碌用户显示黄色
+    }
+    qDebug() << "PrivateChatTab: UI - 将 " << user->getUsername() << " 添加到 "
+             << (user->getStatus() == User::Online
+                     ? "在线"
+                     : (user->getStatus() == User::Offline ? "离线" : "忙碌"))
+             << "列表。";
+}
+
+// 辅助函数：将用户从指定列表 UI 移除
+void PrivateChatTab::removeUserFromListUI(long userId, QListWidget* targetList)
+{
+    if (!targetList) return;
+
+    for (int i = 0; i < targetList->count(); ++i)
+    {
+        QListWidgetItem* item = targetList->item(i);
+        if (item->data(UserIdRole).toLongLong() == userId)
+        {
+            qDebug() << "PrivateChatTab: UI - 从 " << targetList->objectName() << " 移除 "
+                     << item->data(UsernameRole).toString();
+            delete targetList->takeItem(i);  // 移除并删除项
+            return;
         }
     }
 }
 
-void PrivateChatTab::addToOfflineList(const QJsonObject& userObj)
+// **UserManager 初始化完成后的槽函数**
+void PrivateChatTab::onUsersInitialized()
 {
-    QString username = userObj["username"].toString();
-    QString nickname = userObj["nickname"].toString();
-    QString displayText = QString("%1 (%2)").arg(nickname).arg(username);
-    QListWidgetItem* item = new QListWidgetItem(displayText);
-    item->setData(Qt::UserRole, username);
-    qDebug() << "add offline users: " << item << " data: " << item->data(Qt::UserRole).toString();
-    offlineUsersList->addItem(item);
+    refreshUserLists();  // 收到初始化信号后，刷新整个列表
+    qDebug() << "PrivateChatTab: Received usersInitialized signal. Refreshing UI.";
 }
 
-void PrivateChatTab::removeFromOfflineList(const QJsonObject& userObj)
+// **响应 UserManager::userStatusChanged 信号**
+void PrivateChatTab::onUserStatusChanged(User* user)
 {
-    if (!userObj.contains("username"))
-    {
-        qDebug() << "removeFromOfflineList: Missing username in userObj";
-        return;
-    }
+    if (!user) return;
 
-    QString username = userObj["username"].toString();
-    for (int i = 0; i < offlineUsersList->count(); ++i)
-    {
-        QListWidgetItem* item = offlineUsersList->item(i);
-        if (item->data(Qt::UserRole).toString() == username)
-        {
-            qDebug() << "Removing from offline users: " << username;
-            delete offlineUsersList->takeItem(i);
-            break;
-        }
-    }
+    // 先从两个列表中都移除，确保只存在于正确的位置
+    removeUserFromListUI(user->getUserId(), onlineUsersList);
+    removeUserFromListUI(user->getUserId(), offlineUsersList);
+
+    // 再根据最新状态添加到对应的列表
+    addUserToListUI(user);
+    qDebug() << "PrivateChatTab: UI - 响应用户状态变化通知: " << user->getUsername() << " -> "
+             << user->getStatus();
 }
 
-void PrivateChatTab::initOnlineUsers(const QJsonArray& users)
+// **响应 UserManager::userAdded 信号 (新用户首次加入)**
+void PrivateChatTab::onUserAdded(User* user)
+{
+    if (!user) return;
+    // 新用户直接添加到对应列表
+    addUserToListUI(user);
+    qDebug() << "PrivateChatTab: UI - 响应新用户加入通知: " << user->getUsername();
+}
+
+// 辅助函数：刷新整个列表
+void PrivateChatTab::refreshUserLists()
 {
     onlineUsersList->clear();
-    for (const QJsonValue& user : users)
-    {
-        QJsonObject userObj = user.toObject();
-        addToOnlineList(userObj);
-        userObj["isOnline"] = true;
-        allUsers[userObj["username"].toString()] = userObj;
-        onlineNumbers++;
-    }
-}
-
-void PrivateChatTab::initOfflineUsers(const QJsonArray& users)
-{
     offlineUsersList->clear();
-    for (const QJsonValue& user : users)
-    {
-        QJsonObject userObj = user.toObject();
-        addToOfflineList(userObj);
-        userObj["isOnline"] = false;
-        allUsers[userObj["username"].toString()] = userObj;
-        offlineNumbers++;
-    }
-}
 
-void PrivateChatTab::someoneChange(int status, const QJsonObject& cur_user)
-{
-    if (status == 0)  // 上线
+    QMap<long, User*> allUsers = userManager->getAllUsers();
+    for (User* user : allUsers.values())
     {
-        QString cur_username = cur_user["username"].toString();
-        if (allUsers.contains(cur_username))
-        {
-            if (!allUsers[cur_username]["isOnline"].toBool())
-            {
-                allUsers[cur_username]["isOnline"] = true;
-                onlineNumbers++;
-                offlineNumbers--;
-                qDebug() << cur_username << " 上线";
-                addToOnlineList(cur_user);
-                removeFromOfflineList(cur_user);
-            }
-            else
-            {
-                qDebug() << cur_username << " 重复登录";
-            }
-        }
-        else
-        {
-            allUsers[cur_username] = cur_user;
-            allUsers[cur_username]["isOnline"] = true;
-            onlineNumbers++;
-            qDebug() << cur_username << " 新增在线";
-            addToOnlineList(cur_user);
-        }
+        addUserToListUI(user);  // 将所有用户按其状态添加到对应列表
     }
-    else  // 下线
-    {
-        QString cur_username = cur_user["username"].toString();
-        if (allUsers.contains(cur_username))
-        {
-            if (allUsers[cur_username]["isOnline"].toBool())
-            {
-                allUsers[cur_username]["isOnline"] = false;
-                onlineNumbers--;
-                offlineNumbers++;
-                addToOfflineList(cur_user);
-                removeFromOnlineList(cur_user);
-            }
-            else
-            {
-                qDebug() << cur_username << " 重复登出";
-            }
-        }
-        else
-        {
-            allUsers[cur_username] = cur_user;
-            allUsers[cur_username]["isOnline"] = false;
-            offlineNumbers++;
-            qDebug() << cur_username << " 新增离线";
-            addToOfflineList(cur_user);
-        }
-    }
-}
-
-int PrivateChatTab::getOnlineNumber()
-{
-    return onlineNumbers;
-}
-
-int PrivateChatTab::getOfflineNumber()
-{
-    return offlineNumbers;
+    qDebug() << "PrivateChatTab: UI - 用户列表已从 UserManager 刷新。";
 }

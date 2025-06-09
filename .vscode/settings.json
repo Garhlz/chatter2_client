@@ -1,24 +1,45 @@
 {
-    "C_Cpp.intelliSenseEngine": "disabled", // 禁用 MS 的
-    "clangd.path": "clangd", // 如果不是全局命令，写完整路径
+    // C/C++ IntelliSense Engine 设置
+    "C_Cpp.intelliSenseEngine": "disabled", // 禁用 MS 的 C/C++ 插件自带的 IntelliSense
+    
+    // Clangd 相关的配置
+    "clangd.path": "clangd", // 如果 clangd 不在全局 PATH 中，请提供完整路径，例如 "C:/path/to/clangd.exe"
     "clangd.arguments": [
-      "--compile-commands-dir=build",
-      "--header-insertion=never"
+      "--compile-commands-dir=build", // 告诉 clangd 在 build 目录查找 compile_commands.json
+      "--header-insertion=never" // 禁用头文件自动插入
     ],
-    "CMake Tools: Build Directory": "${workspaceFolder}/build",
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "xaver.clang-format",
-    "[cpp]": {
-        "editor.defaultFormatter": "xaver.clang-format"
+
+    // CMake Tools 插件的配置
+    "cmake.buildDirectory": "${workspaceFolder}/build", // 指定 CMake 构建输出目录
+    "cmake.generator": "MinGW Makefiles", // 明确指定 CMake 生成器为 MinGW Makefiles
+    "cmake.preferredGenerators": [ // 定义生成器的优先顺序，确保 MinGW Makefiles 在首位
+        "MinGW Makefiles"
+    ],
+    "cmake.buildType": "Debug", // 设置构建类型为 Debug
+
+    "cmake.configureSettings": {
+        // CMAKE_EXPORT_COMPILE_COMMANDS 默认为 ON，但为了确保，在此明确设置为 true
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true 
+        // 📢 注意：CMAKE_PREFIX_PATH 建议通过 Kit 配置（下一步），
+        // 这样可以更好地管理不同的编译器环境。如果 Kit 设置后仍有问题，
+        // 可以在此处添加 "CMAKE_PREFIX_PATH": "C:/Qt/6.5.3/mingw_64"
     },
-    "clang-format.executable": "clang-format", // 如果不在 PATH，可以填完整路径
-    "C_Cpp.clang_format_style": "file", // 使用项目里的 .clang-format
-    "editor.tabSize": 4,
-    "editor.detectIndentation": false,
-    "editor.insertSpaces": true,
+
+    // 代码格式化设置 (Clang-Format)
+    "editor.formatOnSave": true, // 保存时自动格式化
+    "editor.defaultFormatter": "xaver.clang-format", // 默认 C++ 格式化工具
+    "clang-format.executable": "clang-format", // 如果 clang-format 不在全局 PATH 中，请提供完整路径
+    "C_Cpp.clang_format_style": "file", // 使用项目根目录下的 .clang-format 文件定义样式
+
+    // 编辑器通用设置
+    "editor.tabSize": 4, // 默认 Tab 键的宽度为 4 个空格
+    "editor.detectIndentation": false, // 禁用自动检测缩进
+    "editor.insertSpaces": true, // 使用空格代替 Tab
+
+    // 针对 C++ 文件的特定设置 (会覆盖通用设置)
     "[cpp]": {
-        "editor.tabSize": 4,
-        "editor.insertSpaces": true
+        "editor.defaultFormatter": "xaver.clang-format", // 再次明确 C++ 文件使用 clang-format 格式化
+        "editor.tabSize": 4, // C++ 文件 Tab 宽度为 4 个空格
+        "editor.insertSpaces": true // C++ 文件使用空格代替 Tab
     }
 }
-  

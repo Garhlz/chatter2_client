@@ -5,7 +5,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
-
+#include "utils/GroupTask.h"
 class MessageHandler
 {
    public:
@@ -15,8 +15,10 @@ class MessageHandler
     static QJsonObject createChatMessage(const QString& content, const QString& token);
     static QJsonObject createPrivateChatMessage(const QString& receiver, const QString& content,
                                                 const QString& token);
-    static QJsonObject createGroupChatMessage(const QString& groupName, const QString& content,
-                                              const QString& token);
+    // change
+    static QJsonObject createGroupChatMessage(long userId, const QString& username,
+                                              const QString& nickname, long groupId,
+                                              const QString& content);
     static QJsonObject createFileMessage(const QString& receiver, const QByteArray& fileContent,
                                          const QString& token);
     static QJsonObject createLogoutMessage(const QString& token);
@@ -26,6 +28,8 @@ class MessageHandler
     static QString getSystemMessage(const QJsonObject& response);
     static QJsonArray getOnlineUsers(const QJsonObject& response);
     static int getOnlineCount(const QJsonObject& response);
+    // 新增
+    static QJsonObject createGroupTask(const GroupTask* task);
 };
 
 #endif  // MESSAGEHANDLER_H

@@ -28,8 +28,6 @@ MessageBubble::MessageBubble(const QString& avatar, const QString& nickname,
     nicknameLabel = new QLabel(nickname, this);
     contentLabel = new QLabel(this);  // 内容标签统一在这里初始化
     timeLabel = new QLabel(timestamp, this);
-    progressBar = new QProgressBar(this);  // 进度条统一在这里初始化
-    statusLabel = new QLabel(this);        // 状态标签统一在这里初始化
 
     // 初始化主布局
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
@@ -84,10 +82,12 @@ MessageBubble::MessageBubble(const QString& avatar, const QString& nickname,
             // 使用 toVariant().toLongLong() 获取文件大小，避免溢出
             // todo
             QString fileSizeStr = formatFileSize(obj["fileSize"].toInt());
-            QString displayText = QString("📄 %1 (%2)").arg(fileName).arg(fileSizeStr);
+            QString displayText = QString("[file] %1 (%2)").arg(fileName).arg(fileSizeStr);
 
             contentLabel->setText(displayText);         // 设置 contentLabel 的文本
             contentLabel->setProperty("file", "true");  // 标记为文件消息
+            progressBar = new QProgressBar(this);
+            statusLabel = new QLabel(this);
 
             // 初始化进度条和状态标签的显示/隐藏和文本
             progressBar->setRange(0, 100);
@@ -108,10 +108,16 @@ MessageBubble::MessageBubble(const QString& avatar, const QString& nickname,
                 }
             }
             else
-            {                                   // 未传输完成 (上传中/下载中/未下载)
-                progressBar->setVisible(true);  // 显示进度条
-
-                statusLabel->setText("等待中...");  // 发送方正在上传
+            {
+                progressBar->setVisible(false);  // 只在下载的时候显示进度条
+                if (isSender)
+                {
+                    statusLabel->setText("未下载");
+                }
+                else
+                {
+                    statusLabel->setText("未下载");
+                }
             }
             statusLabel->setObjectName("statusLabel");
             statusLabel->setVisible(true);  // 状态标签应该总是可见，只是内容不同
@@ -121,8 +127,10 @@ MessageBubble::MessageBubble(const QString& avatar, const QString& nickname,
     // --- 处理文本消息 ---
     // 只有在不是文件消息时才处理文本。
     if (!isFileMessage)
-    {  // 如果上面 isFileMessage 被设置为 true，则此块不会执行
+    {
         contentLabel->setText(content.toString());  // 设置 contentLabel 的文本
+        // progressBar->setTextVisible(false);
+        // statusLabel->setVisible(false);
     }
 
     // --- 设置内容标签通用属性 (现在 contentLabel 保证已被初始化) ---
@@ -180,18 +188,20 @@ MessageBubble::~MessageBubble() {}
 void MessageBubble::mousePressEvent(QMouseEvent* event)
 {
     // 将事件位置转换为 contentLabel 的局部坐标
+    // 在这里根据状态控制气泡的点击反应
     QPoint labelPos = contentLabel->mapFromParent(event->pos());
     if (isFileMessage && contentLabel->rect().contains(labelPos))
     {
-        if (!isSender && !haveTransmitted)
-        {  // 只有不是发送者且没有下载的时候才会开始下载
+        if (!haveTransmitted)  // 只要没有传输, 就应该点击下载
+        {
             qDebug() << "Emitting fileMessageClicked with URL:" << fileUrl;
             emit fileMessageClicked(fileUrl, fileName, taskId);  // 下载接口
+            progressBar->setVisible(true);
             this->setEnabled(false);
             // 在这里关闭, 下载完成才会打开
         }
-        else if (haveTransmitted)
-        {  // 已经传输完成
+        else
+        {  // 已经传输完成, 打开本地文件所在位置
             openFileInExplorer(localFilePath);
         }
     }
@@ -215,6 +225,7 @@ void MessageBubble::updateProgress(qint64 bytesProcessed, qint64 bytesTotal)
 }
 
 void MessageBubble::updateStatus(const QString& status)
+// 会调用这个的都是传输结束之后更新状态
 {
     statusLabel->setText(status);
     statusLabel->setVisible(true);
@@ -246,7 +257,7 @@ void MessageBubble::updateFileInfo(const QJsonObject& fileInfo)
     QString fileSizeStr = formatFileSize(fileSize);
 
     // 更新显示文本
-    QString displayText = QString("📄 %1 (%2)").arg(fileName).arg(fileSizeStr);
+    QString displayText = QString("[file] %1 (%2)").arg(fileName).arg(fileSizeStr);
     contentLabel->setText(displayText);
 
     // 设置鼠标指针样式

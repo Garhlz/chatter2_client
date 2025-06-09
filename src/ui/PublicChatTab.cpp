@@ -107,16 +107,15 @@ void PublicChatTab::appendMessage(const QString& sender, const QString& content,
         layout->addStretch();
     }
 
-    // 自动滚动到最新消息
-    bool isAtBottom = publicChatDisplay->verticalScrollBar()->value() >=
-                      publicChatDisplay->verticalScrollBar()->maximum() - 20;
-    if (isAtBottom)
-    {
-        QTimer::singleShot(10, publicChatDisplay,
-                           [=]()
-                           {
-                               publicChatDisplay->verticalScrollBar()->setValue(
-                                   publicChatDisplay->verticalScrollBar()->maximum());
-                           });
-    }
+    // 强制刷新视口，确保布局更新
+    publicChatDisplay->viewport()->update();
+    // 使用 QTimer::singleShot 延迟执行，确保布局已经计算出新的 maximum() 值
+    // 延迟设为0ms，表示尽快执行，通常已足够。如果偶尔出现滚动不到底的情况，可适当增加延迟 (如
+    // 10ms)。
+    QTimer::singleShot(0, publicChatDisplay,
+                       [=]()
+                       {
+                           publicChatDisplay->verticalScrollBar()->setValue(
+                               publicChatDisplay->verticalScrollBar()->maximum());
+                       });
 }

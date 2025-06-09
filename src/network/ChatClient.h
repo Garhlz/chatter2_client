@@ -8,7 +8,6 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
-
 class ChatClient : public QObject
 {
     Q_OBJECT
@@ -23,10 +22,14 @@ class ChatClient : public QObject
     void registerUser(const QString& username, const QString& password, const QString& nickname);
     void sendMessage(const QString& content);
     void sendPrivateMessage(const QString& receiver, const QString& content);
-    void sendGroupMessage(const QString& groupName, const QString& content);
     void logout();
     void requestGroupList();
     QString getToken() const { return currentToken; }
+
+   public slots:
+    // 需要改为公共槽函数
+    void sendGroupMessage(long groupId, const QString& content);
+    void sendGroupTask(GroupTask* task);
 
    signals:
     void connected();
@@ -36,8 +39,6 @@ class ChatClient : public QObject
     void messageReceived(const QString& sender, const QString& content, qint64 messageId);
     void privateMessageReceived(const QString& sender, const QString& receiver,
                                 const QString& content, qint64 messageId);
-    void groupMessageReceived(const QString& sender, const QString& groupName,
-                              const QString& content, qint64 messageId);
     void errorOccurred(const QString& error);
     void onlineUsersInit(const QJsonArray& users);
     void offlineUsersInit(const QJsonArray& users);
@@ -45,7 +46,6 @@ class ChatClient : public QObject
     void someoneLogin(const QJsonObject& loginUser);  // 信号中继到chatwindow
     void someoneLogout(const QJsonObject& logoutUser);
 
-    void groupListReceived(const QJsonArray& groups);
     void historyMessagesReceived(const QJsonArray& messages);
 
    private slots:

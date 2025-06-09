@@ -75,8 +75,6 @@ void PrivateChatSession::connectSignals()
     connect(privateMessageInput, &QLineEdit::returnPressed, this,
             &PrivateChatSession::sendPrivateMessage);
     connect(sendFileButton, &QPushButton::clicked, this, &PrivateChatSession::sendFile);
-    // connect(GlobalEventBus::instance(), &GlobalEventBus::globalAppendMessage,
-    //         this, &PrivateChatSession::handleFileReceived);
     connect(&FileTransferManager::instance(), &FileTransferManager::uploadFinished, this,
             &PrivateChatSession::onUploadFinished);
     connect(&FileTransferManager::instance(), &FileTransferManager::downloadFinished, this,
@@ -310,7 +308,6 @@ void PrivateChatSession::appendMessage(const QString& sender, const QString& rec
             delete item;
         }
     }
-    // qDebug() << "PrivateChatSession::appendMessage content: " << content;
     QString displaySender = (sender == curUsername) ? curNickname : targetNickname;
 
     QJsonObject modifiedFileInfo;
@@ -327,9 +324,10 @@ void PrivateChatSession::appendMessage(const QString& sender, const QString& rec
         QString fileUrl = modifiedFileInfo["fileUrl"].toString();
 
         if (sender == curUsername)
-        {  // 当前用户是发送者, 判定为已经上传, 来自服务器存储的历史记录
+        {  // ! change
+            // 修改为从历史消息中加载, 重新下载一遍
             modifiedFileInfo["isSender"] = true;
-            modifiedFileInfo["haveTransmitted"] = true;
+            modifiedFileInfo["haveTransmitted"] = false;
         }
         else
         {  // 当前是接收者, 认为没有下载
@@ -377,19 +375,22 @@ void PrivateChatSession::appendMessage(const QString& sender, const QString& rec
 
     layout->addStretch();
 
+    // 滚动条逻辑并不智能
     bool isAtBottom = privateChatDisplay->verticalScrollBar()->value() >=
                       privateChatDisplay->verticalScrollBar()->maximum() - 20;
 
     privateChatDisplay->viewport()->update();
-    if (isAtBottom)
-    {
-        QTimer::singleShot(10, privateChatDisplay,
-                           [=]()
-                           {
-                               privateChatDisplay->verticalScrollBar()->setValue(
-                                   privateChatDisplay->verticalScrollBar()->maximum());
-                           });
-    }
+    // 使用 QTimer::singleShot 延迟执行，确保布局已经计算出新的 maximum() 值
+    QTimer::singleShot(0, privateChatDisplay,  // 延迟设为0，表示尽快执行
+                       [=]()
+                       {
+                           privateChatDisplay->verticalScrollBar()->setValue(
+                               privateChatDisplay->verticalScrollBar()->maximum());
+                       });
+
+    // QTimer::singleShot(10, ...) 这里的10ms延迟是为了确保布局计算完成，
+    // 如果设置为0，Qt会尽可能快地执行，通常也足够了。
+    // 如果偶尔出现滚动不到底的情况，再适当增加延迟。
 }
 
 QString PrivateChatSession::formatFileSize(qint64 fileSize)
@@ -397,4 +398,15 @@ QString PrivateChatSession::formatFileSize(qint64 fileSize)
     if (fileSize < 1024) return QString("%1 B").arg(fileSize);
     if (fileSize < 1024 * 1024) return QString("%1 KB").arg(fileSize / 1024.0, 0, 'f', 1);
     return QString("%1 MB").arg(fileSize / (1024.0 * 1024.0), 0, 'f', 1);
+}
+
+void PrivateChatSession::scrollToBottom()
+{
+    privateChatDisplay->viewport()->update();
+    QTimer::singleShot(0, privateChatDisplay,
+                       [=]()
+                       {
+                           privateChatDisplay->verticalScrollBar()->setValue(
+                               privateChatDisplay->verticalScrollBar()->maximum());
+                       });
 }

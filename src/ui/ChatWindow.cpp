@@ -11,12 +11,14 @@
 #include <QVBoxLayout>
 #include "GlobalEventBus.h"
 #include <QJsonDocument>
-ChatWindow::ChatWindow(ChatClient* client, const QString& username, const QString& nickname,
-                       QWidget* parent)
+#include "utils/UserInfo.h"
+ChatWindow::ChatWindow(ChatClient* client, QWidget* parent)
     : QMainWindow(parent),
       chatClient(client),
-      curUsername(username),
-      nickname(nickname),
+      onlineNumbers(0),
+      offlineNumbers(0),
+      curUsername(UserInfo::instance().username()),
+      nickname(UserInfo::instance().nickname()),
       isInitialized(false)
 {
     if (!chatClient || nickname.isEmpty())
@@ -78,10 +80,13 @@ void ChatWindow::setupUi()
         chatTabs->setObjectName("chatTabs");
         mainLayout->addWidget(chatTabs);
 
+        qDebug() << "ChatWindow: Init user manager";
+        userManager = new UserManager(this);
+
         qDebug() << "ChatWindow: Setting up tabs";
         publicChatTab = new PublicChatTab(chatClient, nickname, this);
-        privateChatTab = new PrivateChatTab(chatClient, curUsername, nickname, this);
-        groupChatTab = new GroupChatTab(chatClient, nickname, this);
+        privateChatTab = new PrivateChatTab(chatClient, curUsername, nickname, userManager, this);
+        groupChatTab = new GroupChatTab(chatClient, nickname, userManager, this);
 
         chatTabs->addTab(publicChatTab, "公共聊天");
         chatTabs->addTab(privateChatTab, "私聊");
@@ -155,22 +160,28 @@ void ChatWindow::connectSignals()
         connect(chatClient, &ChatClient::messageReceived, this, &ChatWindow::handleMessageReceived);
         connect(chatClient, &ChatClient::privateMessageReceived, this,
                 &ChatWindow::handlePrivateMessageReceived);
-        connect(chatClient, &ChatClient::groupMessageReceived, this,
-                &ChatWindow::handleGroupMessageReceived);
-
+        // 用户状态相关
         connect(chatClient, &ChatClient::onlineUsersInit, this, &ChatWindow::handleOnlineUsersInit);
         connect(chatClient, &ChatClient::offlineUsersInit, this,
                 &ChatWindow::handleOfflineUsersInit);
 
         connect(chatClient, &ChatClient::someoneLogin, this, &ChatWindow::handleSomeoneLogin);
         connect(chatClient, &ChatClient::someoneLogout, this, &ChatWindow::handleSomeoneLogout);
-        connect(chatClient, &ChatClient::groupListReceived, this,
-                &ChatWindow::handleGroupListReceived);
+
         connect(chatClient, &ChatClient::historyMessagesReceived, this,
                 &ChatWindow::handleHistoryMessagesReceived);
         connect(chatClient, &ChatClient::errorOccurred, this, &ChatWindow::handleError);
         connect(statusBar()->findChild<QPushButton*>(), &QPushButton::clicked, this,
                 &ChatWindow::handleLogout);
+
+        // 连接UserManager的信号到ChatWindow的UI更新槽
+        connect(userManager, &UserManager::usersInitialized, this,
+                &ChatWindow::updateUserCountsDisplay);
+        connect(userManager, &UserManager::userStatusChanged, this,
+                &ChatWindow::updateUserCountsDisplay);
+        connect(userManager, &UserManager::userAdded, this, &ChatWindow::updateUserCountsDisplay);
+        connect(userManager, &UserManager::userRemoved, this, &ChatWindow::updateUserCountsDisplay);
+        isInitialized = true;  // 假设UI和Manager都已准备好
         qDebug() << "ChatWindow: Signals connected";
     }
     catch (const QException& e)
@@ -219,76 +230,6 @@ void ChatWindow::handlePrivateMessageReceived(const QString& sender, const QStri
     privateChatTab->appendMessage(sender, receiver, content, timestamp, false);
     chatTabs->setCurrentWidget(privateChatTab);
     if (messageId > 0) displayedMessages.insert(messageId);
-}
-
-void ChatWindow::handleGroupMessageReceived(const QString& sender, const QString& groupName,
-                                            const QString& content, qint64 messageId)
-{
-    if (!isInitialized)
-    {
-        qDebug() << "ChatWindow: Ignoring groupMessageReceived before initialization";
-        return;
-    }
-    if (messageId > 0 && displayedMessages.contains(messageId)) return;
-    QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-    groupChatTab->appendMessage(sender, QString("[%1] %2").arg(groupName).arg(content), timestamp);
-    chatTabs->setCurrentWidget(groupChatTab);
-    if (messageId > 0) displayedMessages.insert(messageId);
-}
-
-void ChatWindow::handleOnlineUsersInit(const QJsonArray& users)
-{
-    if (!isInitialized)
-    {
-        qDebug() << "ChatWindow: Ignoring onlineUsersUpdated before initialization";
-        return;
-    }
-    privateChatTab->initOnlineUsers(users);
-    onlineNumbers = users.count();
-    onlineCountLabel->setText(QString("在线人数: %1").arg(onlineNumbers));
-}
-
-void ChatWindow::handleOfflineUsersInit(const QJsonArray& users)
-{
-    if (!isInitialized)
-    {
-        qDebug() << "ChatWindow: Ignoring onlineUsersUpdated before initialization";
-        return;
-    }
-    privateChatTab->initOfflineUsers(users);
-    offlineNumbers = users.count();
-}
-/*
-1: 在offline,不在online(理想状态, 未登录)
-2: 都不在(可能是新注册用户, 如果是登录就正确,若退出, 改为退出)
-3: 在online, 不在offline(理想状态, 已登录)
-4: 都在(出错,若登录,还是登录, 若退出, 改为退出 )
-*/
-
-void ChatWindow::handleSomeoneLogin(const QJsonObject& loginUser)
-{
-    privateChatTab->someoneChange(0, loginUser);  // 0表示登录
-    onlineNumbers = privateChatTab->getOnlineNumber();
-    onlineCountLabel->setText(QString("在线人数: %1").arg(onlineNumbers));
-    offlineNumbers = privateChatTab->getOfflineNumber();
-}
-
-void ChatWindow::handleSomeoneLogout(const QJsonObject& logoutUser)
-{
-    privateChatTab->someoneChange(1, logoutUser);
-    onlineNumbers = privateChatTab->getOnlineNumber();
-    onlineCountLabel->setText(QString("在线人数: %1").arg(onlineNumbers));
-    offlineNumbers = privateChatTab->getOfflineNumber();
-}
-
-void ChatWindow::handleGroupListReceived(const QJsonArray& groups)
-{
-    if (!isInitialized)
-    {
-        qDebug() << "ChatWindow: Ignoring groupListReceived before initialization";
-        return;
-    }
-    groupChatTab->updateGroupList(groups);
 }
 
 void ChatWindow::handleHistoryMessagesReceived(const QJsonArray& messages)
@@ -340,12 +281,22 @@ void ChatWindow::handleHistoryMessagesReceived(const QJsonArray& messages)
             QString receiver = message["receiver"].toString();
             privateChatTab->appendMessage(senderUsername, receiver, content, timestamp, false);
         }
-        else if (type == "GROUP_CHAT")
+        else if (type == "GROUP_CHAT")  // 处理历史消息中的群组消息
         {
-            if (!message.contains("groupName")) continue;
-            groupChatTab->appendMessage(
-                sender, QString("[%1] %2").arg(message["groupName"].toString()).arg(content),
-                timestamp);
+            if (!message.contains("groupId")) continue;
+            QString senderUsername = message["username"].toString();
+            QString senderNickname = message["nickname"].toString();
+            long groupId = message["groupId"].toVariant().toLongLong();
+            QString content = message["content"].toString();
+
+            QString timestamp =
+                message.contains("timestamp") && !message["timestamp"].isNull()
+                    ? QDateTime::fromString(message["timestamp"].toString(), Qt::ISODate)
+                          .toString("hh:mm:ss")
+                    : QDateTime::currentDateTime().toString("hh:mm:ss");
+
+            groupChatTab->appendMessage(senderUsername, senderNickname, groupId, content,
+                                        timestamp);
         }
         else if (type == "FILE")
         {
@@ -366,6 +317,7 @@ void ChatWindow::handleLogout()
 {
     chatClient->logout();
     close();
+    // todo 显示登录窗口
 }
 
 void ChatWindow::handleError(const QString& error)
@@ -399,4 +351,81 @@ void ChatWindow::appendMessageBubble(QWidget* container, const QString& sender,
         new MessageBubble(avatar, sender, content, timestamp, sender == nickname, container);
     layout->addWidget(bubble);
     layout->addStretch();
+}
+
+// --用户状态相关--
+
+// 处理初始在线用户列表
+void ChatWindow::handleOnlineUsersInit(const QJsonArray& users)
+{
+    if (!isInitialized)
+    {
+        qDebug() << "ChatWindow: Ignoring onlineUsersInit before initialization";
+        return;
+    }
+    userManager->initOnlineUsers(users);  // 传递给 UserManager 处理
+    m_initialOnlineLoaded = true;         // 标记在线列表已加载
+
+    // 检查是否所有初始数据都已加载
+    if (m_initialOnlineLoaded && m_initialOfflineLoaded)
+    {
+        userManager->markInitialDataLoaded();  // 通知 UserManager 初始数据加载完成
+        // 可选：重置标志，如果你的应用支持多次完整的初始化流程
+        // m_initialOnlineLoaded = false;
+        // m_initialOfflineLoaded = false;
+    }
+    qDebug() << "ChatWindow: 初始在线用户列表已处理。";
+}
+
+// 处理初始离线用户列表
+void ChatWindow::handleOfflineUsersInit(const QJsonArray& users)
+{
+    if (!isInitialized)
+    {
+        qDebug() << "ChatWindow: Ignoring offlineUsersInit before initialization";
+        return;
+    }
+    userManager->initOfflineUsers(users);  // 传递给 UserManager 处理
+    m_initialOfflineLoaded = true;         // 标记离线列表已加载
+
+    // 检查是否所有初始数据都已加载
+    if (m_initialOnlineLoaded && m_initialOfflineLoaded)
+    {
+        userManager->markInitialDataLoaded();  // 通知 UserManager 初始数据加载完成
+        // 可选：重置标志
+        // m_initialOnlineLoaded = false;
+        // m_initialOfflineLoaded = false;
+    }
+    qDebug() << "ChatWindow: 初始离线用户列表已处理。";
+}
+
+// 处理用户登录事件 (连接到 ChatClient 发出的信号)
+void ChatWindow::handleSomeoneLogin(const QJsonObject& loginUser)
+{
+    // 传递给 UserManager 处理，UserManager 会更新内部数据并发射信号
+    userManager->handleUserStatusChange(loginUser, User::Online);  // 登录状态对应 User::Online (1)
+    // ChatWindow 的 UI 统计会通过连接 userManager 信号的 updateUserCountsDisplay 槽自动更新
+    qDebug() << "ChatWindow: 收到用户登录通知，已转发给 UserManager。";
+}
+
+// 处理用户登出事件 (连接到 ChatClient 发出的信号)
+void ChatWindow::handleSomeoneLogout(const QJsonObject& logoutUser)
+{
+    // 传递给 UserManager 处理，UserManager 会更新内部数据并发射信号
+    userManager->handleUserStatusChange(logoutUser,
+                                        User::Offline);  // 登出状态对应 User::Offline (0)
+    // ChatWindow 的 UI 统计会通过连接 userManager 信号的 updateUserCountsDisplay 槽自动更新
+    qDebug() << "ChatWindow: 收到用户登出通知，已转发给 UserManager。";
+}
+
+// 更新在线/离线人数显示 (连接到UserManager的信号)
+void ChatWindow::updateUserCountsDisplay()
+{
+    onlineNumbers = userManager->getOnlineNumber();
+    offlineNumbers = userManager->getOfflineNumber();
+    // busyNumbers = userManager->getBusyNumber(); // 如果有忙碌人数标签
+    onlineCountLabel->setText(QString("在线人数: %1").arg(onlineNumbers));
+    // 如果有 offlineCountLabel 或 busyCountLabel，也在这里更新
+    qDebug() << "ChatWindow: 人数统计更新 -> 在线: " << onlineNumbers
+             << ", 离线: " << offlineNumbers << ", 忙碌: " << userManager->getBusyNumber();
 }

@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     ChatClient* chatClient = new ChatClient(&app);
     LoginWindow* loginWindow = new LoginWindow(chatClient);
     RegisterWindow* registerWindow = new RegisterWindow(chatClient);
-
+    ChatWindow* currentChatWindow = nullptr;
     // 连接信号
     QObject::connect(loginWindow, &LoginWindow::showRegisterWindow,
                      [loginWindow, registerWindow]()
@@ -119,20 +119,40 @@ int main(int argc, char* argv[])
                          registerWindow->hide();
                          loginWindow->show();
                      });
+    // ! change
     QObject::connect(loginWindow, &LoginWindow::loginSuccessful,
-                     [loginWindow, chatClient](const QString& username, const QString& nickname)
+                     [loginWindow, chatClient, &currentChatWindow](const QString& username,
+                                                                   const QString& nickname)
                      {
                          try
                          {
                              qDebug() << "Main: Handling loginSuccessful, "
                                       << "username: " << username << ", nickname: " << nickname;
                              loginWindow->hide();
-                             ChatWindow* newChatWindow =
-                                 new ChatWindow(chatClient, username, nickname);
 
-                             newChatWindow->setAttribute(Qt::WA_DeleteOnClose);
+                             // 如果已有ChatWindow实例，先销毁它
+                             if (currentChatWindow)
+                             {
+                                 delete currentChatWindow;
+                                 currentChatWindow = nullptr;
+                             }
+
+                             // 创建新的ChatWindow
+                             currentChatWindow = new ChatWindow(chatClient);
+                             currentChatWindow->setAttribute(Qt::WA_DeleteOnClose);
+
+                             // 监听窗口关闭信号，更新指针
+                             QObject::connect(currentChatWindow, &ChatWindow::destroyed,
+                                              [&currentChatWindow, &loginWindow]()
+                                              {
+                                                  currentChatWindow = nullptr;
+                                                  loginWindow->show();
+                                                  // ! change
+                                                  // todo 还是有问题
+                                              });
+
                              qDebug() << "Main: Showing ChatWindow";
-                             newChatWindow->show();
+                             currentChatWindow->show();
                          }
                          catch (const std::exception& e)
                          {
@@ -177,73 +197,6 @@ int main(int argc, char* argv[])
                                 ConfigManager::instance().tcpPort());
 
     loginWindow->show();
-
-    // // --- 模拟测试代码 (如果你不需要，可以删除) ---
-    // // 为了测试 FileTransferManager/HttpRequestManager，设置一个模拟用户
-    // UserInfo::instance().setUsername("mock_user");
-    // UserInfo::instance().setToken("mock_token_123");
-
-    // // 模拟从服务器收到的文件消息 JSON
-    // QJsonObject fileInfo;
-    // fileInfo["filename"] = "test_document.txt";
-    // fileInfo["size"] = 54321; // 字节
-    // fileInfo["type"] = "text/plain";
-    // // 注意：这里的 URL 需要是你的 HTTP 服务器实际可访问的地址
-    // fileInfo["downloadUrl"] = QString("http://%1:%2/files/test_document.txt")
-    //                               .arg(ConfigManager::instance().httpHost())
-    //                               .arg(ConfigManager::instance().httpPort());
-
-    // QJsonObject fileMessageObj;
-    // fileMessageObj["type"] = "file"; // 这是一个文件消息
-    // fileMessageObj["sender"] = "Alice";
-    // fileMessageObj["receiver"] = "mock_user";
-    // fileMessageObj["fileInfo"] = fileInfo; // 文件元数据
-    // fileMessageObj["messageId"] = 1001;
-    // fileMessageObj["timestamp"] = QDateTime::currentDateTime().toString("hh:mm:ss");
-
-    // QJsonDocument fileMessageDoc(fileMessageObj);
-
-    // // 模拟 MessageProcessor 接收到并发出通用消息信号
-    // // 如果 ChatWindow 包含 PrivateChatSession，那么它应该能接收到这个信号
-    // QTimer::singleShot(2000, [fileMessageDoc]() {
-    //     qDebug() << "Main: Simulating incoming file JSON (from Alice)...";
-    //     // 假设你有一个 MessageProcessor 实例，并连接到 GlobalEventBus
-    //     // 这里只是直接发射信号，实际应该由 MessageProcessor 负责
-    //     QJsonObject obj = fileMessageDoc.object();
-    //     GlobalEventBus::instance()->incomingGeneralMessage(
-    //         obj["sender"].toString(),
-    //         obj["receiver"].toString(),
-    //         obj["fileInfo"].toObject(), // 传递 QJsonObject 作为 QJsonValue
-    //         obj["messageId"].toVariant().toLongLong(),
-    //         obj["timestamp"].toString()
-    //     );
-    // });
-
-    // // 模拟用户点击 "文件" 按钮，并进行文件上传
-    // QTimer::singleShot(8000, []() {
-    //     qDebug() << "Main: Simulating a file upload via HttpRequestManager.";
-    //     // **请将 "C:/path/to/your/local_test_file.txt" 替换为你的电脑上实际存在的文件路径**
-    //     QString mockLocalFilePath = "C:/Users/YourUser/Desktop/test_upload.txt"; //
-    //     替换为真实路径 if (!QFile::exists(mockLocalFilePath)) {
-    //         qWarning() << "Mock upload file does not exist:" << mockLocalFilePath << ". Skipping
-    //         simulated upload."; return;
-    //     }
-
-    //     QUrl uploadUrl;
-    //     uploadUrl.setScheme("http");
-    //     uploadUrl.setHost(ConfigManager::instance().httpHost());
-    //     uploadUrl.setPort(ConfigManager::instance().httpPort());
-    //     uploadUrl.setPath(ConfigManager::instance().apiPrefix() + "/files/upload"); // 使用
-    //     apiPrefix
-
-    //     QVariantMap formData;
-    //     formData["senderUsername"] = UserInfo::instance().username();
-    //     formData["receiverUsername"] = "Bob"; // 模拟发送给 Bob
-    //     formData["token"] = UserInfo::instance().token();
-
-    //     HttpRequestManager::instance()->uploadFile(uploadUrl, mockLocalFilePath, formData);
-    // });
-    // --- 模拟测试代码结束 ---
 
     return app.exec();
 }
