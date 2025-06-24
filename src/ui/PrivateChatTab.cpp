@@ -263,11 +263,11 @@ void PrivateChatTab::addUserToListUI(User* user)
             item->setForeground(QColor(Qt::darkYellow));
             break;  // 忙碌用户显示黄色
     }
-    qDebug() << "PrivateChatTab: UI - 将 " << user->getUsername() << " 添加到 "
-             << (user->getStatus() == User::Online
-                     ? "在线"
-                     : (user->getStatus() == User::Offline ? "离线" : "忙碌"))
-             << "列表。";
+    // qDebug() << "PrivateChatTab: UI - 将 " << user->getUsername() << " 添加到 "
+    //          << (user->getStatus() == User::Online
+    //                  ? "在线"
+    //                  : (user->getStatus() == User::Offline ? "离线" : "忙碌"))
+    //          << "列表。";
 }
 
 // 辅助函数：将用户从指定列表 UI 移除
@@ -280,8 +280,8 @@ void PrivateChatTab::removeUserFromListUI(long userId, QListWidget* targetList)
         QListWidgetItem* item = targetList->item(i);
         if (item->data(UserIdRole).toLongLong() == userId)
         {
-            qDebug() << "PrivateChatTab: UI - 从 " << targetList->objectName() << " 移除 "
-                     << item->data(UsernameRole).toString();
+            // qDebug() << "PrivateChatTab: UI - 从 " << targetList->objectName() << " 移除 "
+            //          << item->data(UsernameRole).toString();
             delete targetList->takeItem(i);  // 移除并删除项
             return;
         }
@@ -306,8 +306,8 @@ void PrivateChatTab::onUserStatusChanged(User* user)
 
     // 再根据最新状态添加到对应的列表
     addUserToListUI(user);
-    qDebug() << "PrivateChatTab: UI - 响应用户状态变化通知: " << user->getUsername() << " -> "
-             << user->getStatus();
+    // qDebug() << "PrivateChatTab: UI - 响应用户状态变化通知: " << user->getUsername() << " -> "
+    //          << user->getStatus();
 }
 
 // **响应 UserManager::userAdded 信号 (新用户首次加入)**
@@ -316,7 +316,7 @@ void PrivateChatTab::onUserAdded(User* user)
     if (!user) return;
     // 新用户直接添加到对应列表
     addUserToListUI(user);
-    qDebug() << "PrivateChatTab: UI - 响应新用户加入通知: " << user->getUsername();
+    // qDebug() << "PrivateChatTab: UI - 响应新用户加入通知: " << user->getUsername();
 }
 
 // 辅助函数：刷新整个列表
@@ -330,5 +330,5 @@ void PrivateChatTab::refreshUserLists()
     {
         addUserToListUI(user);  // 将所有用户按其状态添加到对应列表
     }
-    qDebug() << "PrivateChatTab: UI - 用户列表已从 UserManager 刷新。";
+    // qDebug() << "PrivateChatTab: UI - 用户列表已从 UserManager 刷新。";
 }

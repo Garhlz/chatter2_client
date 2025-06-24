@@ -4,8 +4,7 @@
 #include "GlobalEventBus.h"
 MessageProcessor::MessageProcessor(QObject* parent) : QObject(parent) {}
 
-bool MessageProcessor::processMessage(const QJsonObject& message, QString& currentToken,
-                                      bool& heartbeatActive)
+bool MessageProcessor::processMessage(const QJsonObject& message)
 {
     if (!message.contains("type") || !message["type"].isString())
     {
@@ -18,11 +17,11 @@ bool MessageProcessor::processMessage(const QJsonObject& message, QString& curre
     // 这里转换为枚举就还要写一遍, 无语了
     if (type == "REGISTER")
     {
-        handleRegisterMessage(message, currentToken, heartbeatActive);
+        handleRegisterMessage(message);
     }
     else if (type == "LOGIN")
     {
-        handleLoginMessage(message, currentToken, heartbeatActive);
+        handleLoginMessage(message);
     }
     else if (type == "SYSTEM")
     {
@@ -76,6 +75,10 @@ bool MessageProcessor::processMessage(const QJsonObject& message, QString& curre
     {
         handleGroupResponse(message);
     }
+    else if (type == "HEARTBEAT")
+    {
+        handleHeartbeatResponse(message);
+    }
     else
     {
         emit errorOccurred(QString("未知消息类型: %1").arg(type));
@@ -84,8 +87,7 @@ bool MessageProcessor::processMessage(const QJsonObject& message, QString& curre
     return true;
 }
 
-void MessageProcessor::handleRegisterMessage(const QJsonObject& message, QString& currentToken,
-                                             bool& heartbeatActive)
+void MessageProcessor::handleRegisterMessage(const QJsonObject& message)
 {
     if (!message.contains("status") || !message["status"].isString())
     {
@@ -95,9 +97,7 @@ void MessageProcessor::handleRegisterMessage(const QJsonObject& message, QString
     QString status = message["status"].toString();
     if (status == "success")
     {
-        currentToken = message.contains("token") ? message["token"].toString() : "";
-        emit registerSuccess(currentToken);
-        heartbeatActive = true;
+        emit registerSuccess();
     }
     else
     {
@@ -108,8 +108,7 @@ void MessageProcessor::handleRegisterMessage(const QJsonObject& message, QString
     }
 }
 
-void MessageProcessor::handleLoginMessage(const QJsonObject& message, QString& currentToken,
-                                          bool& heartbeatActive)
+void MessageProcessor::handleLoginMessage(const QJsonObject& message)
 {
     if (!message.contains("status") || !message["status"].isString())
     {
@@ -127,7 +126,8 @@ void MessageProcessor::handleLoginMessage(const QJsonObject& message, QString& c
             emit errorOccurred("登录消息缺少有效的 token 或 nickname 或 username");
             return;
         }
-        currentToken = message["token"].toString();
+        // 这里本来也没有用到传入的token, 而是自己解析, 十分合理
+        QString currentToken = message["token"].toString();
         long userId = message["userId"].toVariant().toLongLong();
         QString nickname = message["nickname"].toString();
         QString cur_username = message["username"].toString();
@@ -137,13 +137,17 @@ void MessageProcessor::handleLoginMessage(const QJsonObject& message, QString& c
         userInfo.setUsername(cur_username);
         userInfo.setNickname(nickname);
         userInfo.setToken(currentToken);
-        // 问题在于这里没有返回userId, 导致userid是空的
-        qDebug() << "MessageProcessor: Login success, " << "username: " << cur_username
-                 << ", nickname: " << nickname << ", token: " << currentToken;
-        qDebug() << "init user info: " << userId << " " << cur_username << " " << nickname << " "
-                 << currentToken;
-        emit loginSuccess(cur_username, nickname);
-        heartbeatActive = true;
+        userInfo.setOnline(true);
+
+        qDebug()
+            << QString(
+                   "MessageProcessor: Login success, id: %1, username: %2, nickname: %3, token: %4")
+                   .arg(userId)
+                   .arg(cur_username)
+                   .arg(nickname)
+                   .arg(currentToken);
+        // 需要百分号 + .arg 填充参数
+        emit loginSuccess(cur_username, nickname, currentToken);
     }
     else
     {
@@ -335,7 +339,7 @@ void MessageProcessor::handleGroupInfo(const QJsonObject& message)  // 没有处
         return;
     }
 
-    qDebug() << "receive group info: " << message["content"];
+    // qDebug() << "receive group info: " << message["content"];
     GlobalEventBus::instance()->sendGroupInfo(message["content"]);
 }
 
@@ -392,4 +396,10 @@ void MessageProcessor::handleGroupResponse(const QJsonObject& message)  // 没�
 void MessageProcessor::insert(const QString& operationId, GroupTask* task)
 {
     groupTaskMap.insert(operationId, task);
+}
+
+void MessageProcessor::handleHeartbeatResponse(const QJsonObject& message)
+{
+    QString timestamp = message["timestamp"].toString();
+    qInfo()<<"heartbeat at: " << timestamp;
 }

@@ -25,6 +25,12 @@ class LoginWindow : public QMainWindow
     void handleError(const QString& error);
     void showRegister();
 
+    // 新增, 用于使用异步机制处理socket连接..
+    void onChatClientConnected(); // 监听 ChatClient 的 connected 信号
+    void onChatClientError(const QString& error); // 监听 ChatClient 的 errorOccurred 信号 (业务错误)
+    void onChatClientConnectionError(const QString& message); // 监听 ChatClient 的 connectionError 信号 (连接错误)
+
+
    protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
@@ -33,6 +39,9 @@ class LoginWindow : public QMainWindow
    private:
     void setupUi();
     void connectSignals();
+
+    QString currentUsername;
+    QString currentPassword;
 
     ChatClient* chatClient;
     QWidget* centralWidget;
@@ -43,6 +52,8 @@ class LoginWindow : public QMainWindow
     QLabel* statusLabel;
     bool isDragging;
     QPoint dragPosition;
+
+    bool m_isLoginAttemptActive = false; // 新增：标记当前是否有登录尝试正在进行
 };
 
 #endif  // LOGINWINDOW_H

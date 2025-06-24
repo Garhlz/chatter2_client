@@ -313,11 +313,12 @@ void ChatWindow::handleHistoryMessagesReceived(const QJsonArray& messages)
     }
 }
 
+// ! change 发出信号, 在manager处统一管理
 void ChatWindow::handleLogout()
 {
-    chatClient->logout();
-    close();
-    // todo 显示登录窗口
+    // chatClient->logout();
+    emit logoutRequested();
+    // emit windowClosed();
 }
 
 void ChatWindow::handleError(const QString& error)

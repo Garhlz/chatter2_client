@@ -69,6 +69,9 @@ class ChatWindow : public QMainWindow
     bool m_initialOfflineLoaded = false;  // 新增：是否已加载初始离线列表
 
     UserManager* userManager;
+   signals:
+    void logoutRequested();
+    // void windowClosed();
 };
 
 #endif  // CHATWINDOW_H

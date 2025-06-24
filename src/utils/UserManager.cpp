@@ -117,8 +117,8 @@ void UserManager::addOrUpdateUser(long userId, const QString& username, const QS
         {
             emit userAdded(user);
         }
-        qDebug() << "UserManager: Added new user " << username << " (ID:" << userId
-                 << ") with status: " << newStatus;
+        // qDebug() << "UserManager: Added new user " << username << " (ID:" << userId
+        //          << ") with status: " << newStatus;
     }
     else
     {

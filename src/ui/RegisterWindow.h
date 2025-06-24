@@ -21,10 +21,16 @@ class RegisterWindow : public QMainWindow
 
    private slots:
     void handleRegister();
-    void handleRegisterSuccess(const QString& token);
+    void handleRegisterSuccess();
     void handleError(const QString& error);
     void showLogin();
 
+    // 新增, 用于使用异步机制处理socket连接..
+    void onChatClientConnected(); // 监听 ChatClient 的 connected 信号
+    void onChatClientError(const QString& error); // 监听 ChatClient 的 errorOccurred 信号 (业务错误)
+    void onChatClientConnectionError(
+        const QString& message);  // 监听 ChatClient 的 connectionError 信号 (连接错误)
+    void setUiEnabled(bool enabled);
    protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
@@ -33,6 +39,10 @@ class RegisterWindow : public QMainWindow
    private:
     void setupUi();
     void connectSignals();
+
+    QString currentUsername;
+    QString currentPassword;
+    QString currentNickname;
 
     ChatClient* chatClient;
     QWidget* centralWidget;
@@ -44,6 +54,9 @@ class RegisterWindow : public QMainWindow
     QLabel* statusLabel;
     bool isDragging;
     QPoint dragPosition;
+
+    // 新增标志,标记当前是否有注册尝试正在进行
+    bool m_isRegisterAttemptActive = false;
 };
 
 #endif  // REGISTERWINDOW_H

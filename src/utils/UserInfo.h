@@ -19,15 +19,16 @@ class UserInfo
     void setUsername(const QString& username) { m_username = username; }
     void setNickname(const QString& nickname) { m_nickname = nickname; }
     void setToken(const QString& token) { m_token = token; }
+    void setOnline(bool flag){isOnline = flag;}
 
     // 用户信息获取
     long userId() const { return m_userId; }
     QString username() const { return m_username; }
     QString nickname() const { return m_nickname; }
     QString token() const { return m_token; }
-
+    bool online() const {return isOnline;}
     // 检查是否已登录
-    bool isLoggedIn() const { return !m_token.isEmpty(); }
+    bool isLoggedIn() const { return isOnline;}
 
     // 清空用户信息（登出时使用）
     void clear()
@@ -36,6 +37,7 @@ class UserInfo
         m_username.clear();
         m_nickname.clear();
         m_token.clear();
+        isOnline = false;
     }
 
    private:
@@ -46,6 +48,7 @@ class UserInfo
     QString m_username;
     QString m_nickname;
     QString m_token;
+    bool isOnline;
 };
 
 #endif  // USERINFO_H

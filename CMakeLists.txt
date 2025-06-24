@@ -52,6 +52,8 @@ set(PROJECT_SOURCES
     src/utils/User.h
     src/utils/UserManager.cpp
     src/utils/UserManager.h 
+    src/WindowManager.cpp
+    src/WindowManager.h
     resources/resources.qrc
 )
 

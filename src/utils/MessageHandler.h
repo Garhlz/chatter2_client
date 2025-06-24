@@ -18,7 +18,7 @@ class MessageHandler
     // change
     static QJsonObject createGroupChatMessage(long userId, const QString& username,
                                               const QString& nickname, long groupId,
-                                              const QString& content);
+                                              const QString& content, const QString& token);
     static QJsonObject createFileMessage(const QString& receiver, const QByteArray& fileContent,
                                          const QString& token);
     static QJsonObject createLogoutMessage(const QString& token);

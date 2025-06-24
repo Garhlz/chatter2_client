@@ -1,4 +1,7 @@
 #include "LoginWindow.h"
+
+#include "utils/ConfigManager.h"
+
 #include <QApplication>
 #include <QFormLayout>
 #include <QGraphicsDropShadowEffect>
@@ -136,6 +139,12 @@ void LoginWindow::connectSignals()
     connect(chatClient, &ChatClient::loginSuccess, this, &LoginWindow::handleLoginSuccess);
     connect(chatClient, &ChatClient::errorOccurred, this, &LoginWindow::handleError);
     connect(passwordEdit, &QLineEdit::returnPressed, this, &LoginWindow::handleLogin);
+
+    // 新增, 异步连接
+    connect(chatClient, &ChatClient::connected, this, &LoginWindow::onChatClientConnected);
+    connect(chatClient, &ChatClient::errorOccurred, this, &LoginWindow::onChatClientError);
+    connect(chatClient, &ChatClient::connectionError, this, &LoginWindow::onChatClientConnectionError);
+
 }
 
 void LoginWindow::handleLogin()
@@ -159,10 +168,41 @@ void LoginWindow::handleLogin()
         return;
     }
 
-    statusLabel->setText("正在登录...");
-    loginButton->setEnabled(false);
-    chatClient->login(username, password);
+    // 如果已经有登录尝试正在进行，则直接返回，避免重复操作
+    if (m_isLoginAttemptActive) {
+        qDebug() << "LoginWindow: 登录尝试已在进行中，忽略重复点击。";
+        return;
+    }
+
+    // 设置登录尝试标志为 true
+    m_isLoginAttemptActive = true;
+    currentUsername = username;
+    currentPassword = password;
+
+    statusLabel->setText("正在连接服务器...");
+    loginButton->setEnabled(false); // 禁用按钮，避免重复点击
+
+    // 检查当前连接状态
+    if (chatClient->isConnected())
+    {
+        // 如果已经连接（TCP层面），直接尝试登录
+        statusLabel->setText("连接已建立，正在登录...");
+        chatClient->login(currentUsername, currentPassword);
+    }
+    else if (chatClient->connectionState() == ChatClient::ConnectionState::Connecting ||
+             chatClient->connectionState() == ChatClient::ConnectionState::Reconnecting)
+    {
+        // 正在连接中，等待连接成功信号
+        statusLabel->setText("正在连接中，请稍候...");
+        // 标记已经有尝试进行，不再次调用 connectToServer
+    }
+    else
+    {
+        // 未连接状态，发起连接请求
+        chatClient->connectToServer(ConfigManager::instance().tcpHost(), ConfigManager::instance().tcpPort());
+    }
 }
+
 
 void LoginWindow::handleLoginSuccess(const QString& username, const QString& nickname)
 {
@@ -170,6 +210,7 @@ void LoginWindow::handleLoginSuccess(const QString& username, const QString& nic
     loginButton->setEnabled(true);
     usernameEdit->clear();
     passwordEdit->clear();
+    m_isLoginAttemptActive = false; // 登录成功，重置标志
     emit loginSuccessful(username, nickname);
 }
 
@@ -177,9 +218,54 @@ void LoginWindow::handleError(const QString& error)
 {
     statusLabel->setText(error);
     loginButton->setEnabled(true);
+    m_isLoginAttemptActive = false; // 登录失败，重置标志
+    currentUsername.clear(); // 清除暂存的凭据
+    currentPassword.clear();
 }
 
 void LoginWindow::showRegister()
 {
     emit showRegisterWindow();
+}
+
+
+// 槽函数：处理 ChatClient 连接成功信号
+void LoginWindow::onChatClientConnected()
+{
+    if(!this->isVisible())return;
+    // 只有当登录窗口是活动状态且用户意图是登录时，才发送登录请求
+    // 这里的判断条件可以根据你的 LoginWindow 的具体状态管理来定
+    if (!currentUsername.isEmpty() && !currentPassword.isEmpty()) // 确保是因登录而触发的连接
+    {
+        statusLabel->setText("服务器连接成功，正在登录...");
+        chatClient->login(currentUsername, currentPassword);
+    } else {
+        statusLabel->setText("服务器连接成功，请重新输入凭据登录。"); // 可能是意外的连接成功
+        loginButton->setEnabled(true);
+        m_isLoginAttemptActive = false; // 重置标志，允许新的尝试
+    }
+}
+
+
+
+// 槽函数：处理 ChatClient 业务错误信号 (如登录失败)
+void LoginWindow::onChatClientError(const QString& error)
+{
+    statusLabel->setText("登录失败：" + error);
+    loginButton->setEnabled(true); // 重新启用登录按钮
+    // 清空存储的用户名和密码，避免下次连接成功后自动登录
+    currentUsername.clear();
+    currentPassword.clear();
+}
+
+// 槽函数：处理 ChatClient 连接错误信号 (如连接超时，服务器拒绝)
+void LoginWindow::onChatClientConnectionError(const QString& message)
+{
+    statusLabel->setText("连接错误：" + message);
+    loginButton->setEnabled(true); // 重新启用登录按钮
+    // 清空存储的用户名和密码，避免下次连接成功后自动登录
+    currentUsername.clear();
+    currentPassword.clear();
+
+    m_isLoginAttemptActive = false; // 连接失败，重置标志
 }

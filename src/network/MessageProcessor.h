@@ -16,12 +16,13 @@ class MessageProcessor : public QObject
     explicit MessageProcessor(QObject* parent = nullptr);
 
     // 处理消息，返回是否成功，更新 token 和心跳状态
-    bool processMessage(const QJsonObject& message, QString& currentToken, bool& heartbeatActive);
+    bool processMessage(const QJsonObject& message);
     void insert(const QString& operationId, GroupTask* task);
+    void handleHeartbeatResponse(const QJsonObject& message);
    signals:
     // 注册和登录信号
-    void registerSuccess(const QString& token);
-    void loginSuccess(const QString& username, QString& nickname);
+    void registerSuccess();
+    void loginSuccess(const QString& username, const QString& nickname, const QString& token);
     // 消息接收信号
     void messageReceived(const QString& sender, const QString& content, qint64 messageId);
     void privateMessageReceived(const QString& sender, const QString& receiver,
@@ -39,10 +40,8 @@ class MessageProcessor : public QObject
     void someoneLogout(const QJsonObject& logoutUsername);
 
    private:
-    void handleRegisterMessage(const QJsonObject& message, QString& currentToken,
-                               bool& heartbeatActive);
-    void handleLoginMessage(const QJsonObject& message, QString& currentToken,
-                            bool& heartbeatActive);
+    void handleRegisterMessage(const QJsonObject& message);
+    void handleLoginMessage(const QJsonObject& message);
     void handleSystemMessage(const QJsonObject& message);
     void handleChatMessage(const QJsonObject& message);
     void handlePrivateChatMessage(const QJsonObject& message);

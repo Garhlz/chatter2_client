@@ -4,3 +4,5 @@ digest.txt
 tmp.md
 tmp.txt
 prompt.md
+.idea/
+cmake-build-debug/

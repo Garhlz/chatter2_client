@@ -44,7 +44,7 @@ QJsonObject MessageHandler::createPrivateChatMessage(const QString& receiver,
 
 QJsonObject MessageHandler::createGroupChatMessage(long userId, const QString& username,
                                                    const QString& nickname, long groupId,
-                                                   const QString& content)
+                                                   const QString& content, const QString& token)
 {
     QJsonObject message;
     message["type"] = "GROUP_CHAT";
@@ -53,7 +53,7 @@ QJsonObject MessageHandler::createGroupChatMessage(long userId, const QString& u
     message["nickname"] = nickname;
     message["groupId"] = static_cast<qint64>(groupId);  // 明确转换为 qint64
     message["content"] = content;
-    message["token"] = UserInfo::instance().token();
+    message["token"] = token;
     return message;
 }
 
