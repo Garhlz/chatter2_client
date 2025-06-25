@@ -19,6 +19,7 @@ class MessageProcessor : public QObject
     bool processMessage(const QJsonObject& message);
     void insert(const QString& operationId, GroupTask* task);
     void handleHeartbeatResponse(const QJsonObject& message);
+    void handleGroupBroadcast(const QJsonObject& message);
    signals:
     // 注册和登录信号
     void registerSuccess();

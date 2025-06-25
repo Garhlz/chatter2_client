@@ -658,3 +658,9 @@ QScrollArea[objectName^="groupChatDisplay"] QScrollBar::add-line:vertical,
 QScrollArea[objectName^="groupChatDisplay"] QScrollBar::sub-line:vertical {
     height: 0px;
 }
+
+/* 优化在线/离线用户列表项的选中状态 */
+#userListWidget::item:selected {
+    background: #E0E0FF;
+    color: #7B61FF;
+}

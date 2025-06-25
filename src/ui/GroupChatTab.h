@@ -44,6 +44,8 @@ class GroupChatTab : public QWidget
     void on_receiveGroupAddResponse(long userId, long groupId);
 
     void on_receiveGroupRemoveResponse(long userId, long groupId);
+    void on_receiveBroadcastAdd(long groupId, const QString& groupName,long creatorId, const QJsonArray& members, const QJsonArray& history);
+    void on_receiveBroadcastRemove(long groupId, const QString& groupName);
     // 接受群组的信息, 也是初始化群组内容
     // 之前居然忘记连接总线和这个函数了
     void receiveGroupInfo(const QJsonValue& content);

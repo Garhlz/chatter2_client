@@ -157,6 +157,7 @@ void WindowManager::handleClientDisconnected()
     // 如果当前在聊天窗口，则显示断线提示，并尝试重连
     if (m_chatWindow && m_chatWindow->isVisible())
     {
+        qDebug() << "void WindowManager::handleClientDisconnected()";
         displayConnectionStatus("网络连接已断开，正在尝试重连...", true);
         // 这里不直接跳转到登录界面，而是等待 ChatClient 的重连结果
     }

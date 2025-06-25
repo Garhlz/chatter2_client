@@ -376,6 +376,9 @@ void ChatClient::onSocketStateChanged(QAbstractSocket::SocketState socketState)
     {
         case QAbstractSocket::UnconnectedState:
             // 只有当 m_connectionState 不是 Disconnected 且不是用户主动登出时，才设置为 Disconnected
+                // qDebug() << "debug now"<<QMetaEnum::fromType<ConnectionState>().valueToKey(static_cast<int>(m_connectionState));
+                // qDebug() << m_isUserLoggingOut;
+
             if (m_connectionState != ConnectionState::Disconnected && !m_isUserLoggingOut) {
                  setConnectionState(ConnectionState::Disconnected);
             }
@@ -484,6 +487,7 @@ void ChatClient::tryReconnect()
         if (currentSocketState == QAbstractSocket::UnconnectedState)
         {
             setConnectionState(ConnectionState::Reconnecting); // 设置为重连状态
+            qDebug()<<"debug: ChatClient::tryReconnect() " << host << "" <<port;
             socket->connectToHost(host, port);
         }
         else if (currentSocketState == QAbstractSocket::ClosingState ||

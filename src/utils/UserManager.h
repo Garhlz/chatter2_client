@@ -18,11 +18,11 @@ class UserManager : public QObject
     explicit UserManager(QObject* parent = nullptr);
     ~UserManager() override;
 
-    // **新增/恢复：分步初始化用户列表**
+    // 新增/恢复：分步初始化用户列表
     void initOnlineUsers(const QJsonArray& users);
     void initOfflineUsers(const QJsonArray& users);
 
-    // **新增：通知UserManager所有初始数据已加载**
+    // 新增：通知UserManager所有初始数据已加载
     void markInitialDataLoaded();
 
     // 获取用户数据的方法 (外部只能通过这些接口访问)

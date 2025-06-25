@@ -38,6 +38,10 @@ class GlobalEventBus : public QObject
     void sendGroupRemove(long userId, long groupId);
 
     void sendGroupError();  // 之后再改好了
+
+    void sendGroupBroadcastAdd(long groupId, const QString& groupName, long creatorId, const QJsonArray& members,const QJsonArray& history);
+
+    void sendGroupBroadcastRemove(long groupId, const QString& groupName);
     //-------------
     // 居然重名了
     void appendGroupMessage(const QString& senderUsername, const QString& senderNickname,

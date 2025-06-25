@@ -19,6 +19,7 @@ UserSelectionDialog::UserSelectionDialog(const QMap<long, User*>& availableUsers
 
     userListWidget = new QListWidget(this);
     userListWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+    userListWidget->setObjectName("userListWidget");
     mainLayout->addWidget(userListWidget);
 
     // 根据是“添加”还是“移除”成员来填充列表

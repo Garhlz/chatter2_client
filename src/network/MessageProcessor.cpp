@@ -75,6 +75,10 @@ bool MessageProcessor::processMessage(const QJsonObject& message)
     {
         handleGroupResponse(message);
     }
+    else if(type == "GROUP_BROADCAST")
+    {
+        handleGroupBroadcast(message);
+    }
     else if (type == "HEARTBEAT")
     {
         handleHeartbeatResponse(message);
@@ -361,6 +365,7 @@ void MessageProcessor::handleGroupResponse(const QJsonObject& message)  // 没�
     {
         GroupTask* task = groupTaskMap.value(operationId);
         QString taskType = task->getType();
+        // 这里是从map中获取类型的
         qDebug() << "type: " << taskType;
         if (taskType == "GROUP_CREATE")
         {
@@ -402,4 +407,25 @@ void MessageProcessor::handleHeartbeatResponse(const QJsonObject& message)
 {
     QString timestamp = message["timestamp"].toString();
     qInfo()<<"heartbeat at: " << timestamp;
+}
+
+
+void MessageProcessor::handleGroupBroadcast(const QJsonObject& message)
+{
+    QJsonObject content = message["content"].toObject();
+    QString type = content["type"].toString();
+    long groupId = content["groupId"].toVariant().toLongLong();
+    QString groupName = content["groupName"].toString();
+
+    if(type == "add")
+    {
+        long creatorId = content["creatorId"].toVariant().toLongLong();
+        QJsonArray members = content["members"].toArray();
+        QJsonArray history = content["history"].toArray();
+        GlobalEventBus::instance()->sendGroupBroadcastAdd(groupId, groupName, creatorId, members, history);
+    }
+    else if(type == "remove")
+    {
+        GlobalEventBus::instance()->sendGroupBroadcastRemove(groupId, groupName);
+    }
 }

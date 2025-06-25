@@ -3,6 +3,7 @@
 #define USERSELECTIONDIALOG_H
 
 #include <QDialog>
+#include <QtWidgets>
 #include <QListWidget>
 #include <QPushButton>
 #include <QVBoxLayout>

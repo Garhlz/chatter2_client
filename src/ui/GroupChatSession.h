@@ -42,7 +42,7 @@ class GroupChatSession : public QWidget
     GroupChatSession(long groupId_, const QString& groupName_, long creatorId_,
                      const QJsonArray& member, QWidget* parent = nullptr);
 
-    void appendMessage(const QString& sender, const QJsonValue& content, const QString& timestamp);
+    void appendMessage(const QString& senderUsername, const QString& senderNickname,const QJsonValue& content, const QString& timestamp);
 
     long getGroupId();
 
@@ -53,7 +53,7 @@ class GroupChatSession : public QWidget
     QJsonArray getMembers();
 
     void addMemberToList(User* user);
-    void removeMemberFromList(User* user);
+    void removeMemberFromList(long userId);
 
    public slots:
     void scrollToBottom();

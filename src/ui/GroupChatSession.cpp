@@ -95,15 +95,15 @@ void GroupChatSession::sendGroupMessage()
     GlobalEventBus::instance()->sendGroupMessage(groupId, content);
 
     QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-
-    appendMessage(UserInfo::instance().username(), content, timestamp);
+    // 这里传入的是username
+    appendMessage(UserInfo::instance().username(),UserInfo::instance().nickname(), content, timestamp);
 
     groupMessageInput->clear();
 }
 
 // 注意content需要包含状态
 // 这里删除了taskId, 包含在content中
-void GroupChatSession::appendMessage(const QString& sender, const QJsonValue& content,
+void GroupChatSession::appendMessage(const QString& senderUsername,const QString& senderNickname, const QJsonValue& content,
                                      const QString& timestamp)
 {
     QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(groupChatContainer->layout());
@@ -125,7 +125,7 @@ void GroupChatSession::appendMessage(const QString& sender, const QJsonValue& co
 
     // isOwn由是否和当前用户相同决定
     MessageBubble* bubble =
-        new MessageBubble("", sender, content, timestamp, sender == UserInfo::instance().username(),
+        new MessageBubble("", senderNickname, content, timestamp, senderUsername == UserInfo::instance().username(),
                           false, groupChatContainer);
 
     layout->addWidget(bubble);
@@ -186,16 +186,20 @@ void GroupChatSession::addMemberToList(User* user)
     members.append(obj);
 }
 
-void GroupChatSession::removeMemberFromList(User* user)
+void GroupChatSession::removeMemberFromList(long userId)
 {
-    long userId = user->getUserId();
+    // 需要注意members的类型, 就是user的数组
     for (int i = 0; i < members.count(); i++)
     {
-        long curId = members.at(i).toVariant().toLongLong();
+        QJsonObject user = members.at(i).toObject();
+        long curId = user["userId"].toVariant().toLongLong();
         if (curId == userId)
         {
             members.removeAt(i);
+            qDebug()<<"从session中移除用户 " << userId<<" 成功";
             break;
         }
     }
+
+    qDebug()<<"移除之后, 群组成员有: "<<members;
 }

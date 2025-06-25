@@ -127,6 +127,13 @@ void GroupChatTab::connectSignals()
 
     connect(GlobalEventBus::instance(), &GlobalEventBus::sendGroupRemove, this,
             &GroupChatTab::on_receiveGroupRemoveResponse);
+
+    // 新增
+    connect(GlobalEventBus::instance(), &GlobalEventBus::sendGroupBroadcastAdd, this,
+            &GroupChatTab::on_receiveBroadcastAdd);
+
+    connect(GlobalEventBus::instance(), &GlobalEventBus::sendGroupBroadcastRemove, this,
+            &GroupChatTab::on_receiveBroadcastRemove);
 }
 
 void GroupChatTab::on_groupList_itemClicked(QListWidgetItem* item)
@@ -188,8 +195,10 @@ GroupChatSession* GroupChatTab::getOrCreateSession(long groupId, const QString& 
 void GroupChatTab::appendMessage(const QString& senderUsername, const QString& senderNickname,
                                  long groupId, const QString& content, const QString& timestamp)
 {
+    // 这里直接获取群组
     auto session = getOrCreateSession(groupId, "", -1, QJsonArray());
-    session->appendMessage(senderUsername, content, timestamp);
+    // 这里修改了签名
+    session->appendMessage(senderUsername, senderNickname, content, timestamp);
 }
 
 /*
@@ -381,7 +390,7 @@ void GroupChatTab::on_addMemberButton_clicked()
     QSet<long> currentGroupMemberIds;
     if (session)
     {
-        QJsonArray members = session->getMembers();  // 假设 getMembers() 返回 QJsonArray
+        QJsonArray members = session->getMembers();  //getMembers() 返回 QJsonArray
         for (const QJsonValue& memberValue : members)
         {
             if (memberValue.isObject())
@@ -645,7 +654,7 @@ void GroupChatTab::on_receiveGroupRemoveResponse(long userId, long groupId)
 
     QString username = user->getUsername();
 
-    session->removeMemberFromList(user);
+    session->removeMemberFromList(user->getUserId());
 
     // Notify the user
     QMessageBox::information(this, tr("成员移除"),
@@ -656,4 +665,90 @@ void GroupChatTab::on_receiveGroupRemoveResponse(long userId, long groupId)
                                  .arg(groupId));
 
     qDebug() << "Member removed: User ID =" << userId << "from Group ID =" << groupId;
+}
+
+// 这个用户被添加到这个群聊中
+void GroupChatTab::on_receiveBroadcastAdd(long groupId, const QString& groupName,long creatorId, const QJsonArray& members, const QJsonArray& history)
+{
+    // 还需要creatorId, members字段
+    auto session = getOrCreateSession(groupId, groupName, creatorId, members);
+    // 把自己添加进去即可
+    long curUserId = UserInfo::instance().userId();
+    session->addMemberToList(userManager->getUserById(curUserId));
+
+    for(const auto& info : history)
+    {
+        // 现在这是一个后端的MessageDTO
+        QJsonObject message = info.toObject();
+        qDebug()<<"message: "<<message;
+
+        long senderId = message["userId"].toVariant().toLongLong();
+        User* user = userManager->getUserById(senderId);
+
+        QString senderUsername = user->getUsername();
+        QString senderNickname = user->getNickname();
+        QString content = message["content"].toString();
+        // 注意这里的名称是createdAt
+
+        QString timestamp = message["timestamp"].toString();
+        qDebug()<<senderNickname << " " << content << " time is: "<<timestamp;
+        session->appendMessage(senderUsername, senderNickname, content, timestamp);
+    }
+}
+
+void GroupChatTab::on_receiveBroadcastRemove(long groupId, const QString& groupName)
+{
+    // Check if the group exists in the sessions map
+    if (!sessionsMap.contains(groupId))
+    {
+        qWarning() << "Received delete response for non-existent group ID:" << groupId;
+        return;
+    }
+
+    // Get the session to access group details
+    GroupChatSession* session = sessionsMap.value(groupId);
+
+    // Remove the session from the sessions map
+    sessionsMap.remove(groupId);
+
+    // Remove the group from the group list (UI)
+    for (int i = 0; i < groupList->count(); ++i)
+    {
+        QListWidgetItem* item = groupList->item(i);
+        if (item->data(Qt::UserRole).toLongLong() == groupId)
+        {
+            delete groupList->takeItem(i);
+            break;
+        }
+    }
+
+    // Remove the session widget from the stacked widget
+    groupContentStack->removeWidget(session);
+    session->deleteLater();  // Schedule the session for deletion
+
+    // If the deleted group was currently displayed, switch to another group or clear the view
+    if (groupContentStack->currentWidget() == session)
+    {
+        if (groupContentStack->count() > 0)
+        {
+            groupContentStack->setCurrentIndex(0);
+            if (groupList->count() > 0)
+            {
+                groupList->setCurrentRow(0);
+            }
+        }
+        else
+        {
+            // No groups left, clear the selection
+            groupList->clearSelection();
+        }
+    }
+
+    // Notify the user
+    QMessageBox::information(
+        this, tr("群组删除"),
+        tr("群组 '%1' (ID: %2) 已删除或您已退出。").arg(groupName).arg(groupId));
+
+    qDebug() << "Group deleted: ID =" << groupId << ", Name =" << groupName;
+
 }
