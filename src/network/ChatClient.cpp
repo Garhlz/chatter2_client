@@ -292,11 +292,18 @@ void ChatClient::sendGroupTask(GroupTask* task)
 
 void ChatClient::handleSocketConnected()
 {
-    resetReconnectLogic(); // TCP 连接成功，重置重连计数和延迟
-    connectionAttemptTimer->stop();
-    // 这里, 在状态变化的时候, 就会发出信号了
-    setConnectionState(ConnectionState::Connected);
-    qDebug() << "Socket connected (TCP level).";
+    connectionAttemptTimer->stop(); // 停止连接超时检测
+    qDebug() << "Connected to server.";
+    
+    // 重置重连参数
+    resetReconnectLogic();
+    
+    // 如果之前是重连状态，现在连接成功，更新状态为已连接
+    if (m_connectionState == ConnectionState::Reconnecting) {
+        // 注意：这里不直接设置为 Connected，因为需要等待登录成功
+        // 实际连接状态将在登录成功后由 loginSuccess 槽函数更新
+        qDebug() << "Reconnected to server, waiting for login...";
+    }
 }
 
 void ChatClient::handleSocketDisconnected()
@@ -393,9 +400,13 @@ void ChatClient::onSocketStateChanged(QAbstractSocket::SocketState socketState)
             }
             break;
         case QAbstractSocket::ConnectedState:
-            // TCP 连接建立，但业务层尚未“连接”（未登录），所以 m_connectionState 保持不变
-            // 只有登录成功后，loginSuccess 信号的槽函数才会将 m_connectionState 设置为 Connected
-            break;
+            // ! change 当底层 TCP 连接成功建立时，重连定时器会被停止，并且重连尝试次数会被重置
+            if (m_connectionState == ConnectionState::Connecting || m_connectionState == ConnectionState::Reconnecting) {
+                setConnectionState(ConnectionState::Connected); // 设置为已连接状态
+                resetReconnectLogic(); // 重置重连逻辑，停止重连定时器，重置尝试次数和延迟
+                qDebug() << "Socket connected, resetting reconnect logic.";
+            }
+        break;
         case QAbstractSocket::BoundState:
         case QAbstractSocket::ClosingState:
             // ClosingState 表示 socket 正在关闭，此时不应尝试连接
@@ -456,6 +467,7 @@ void ChatClient::handleServerHeartbeatTimeout()
 {
     qWarning() << "Server heartbeat timed out. Forcing disconnect to trigger reconnect.";
     // 服务器长时间无响应，主动断开连接，这将触发 handleSocketDisconnected，进而启动重连
+    setConnectionState(ConnectionState::Reconnecting);
     socket->abort(); // 使用 abort() 强制关闭，立即触发 disconnected 信号
     // setConnectionState 的更新将在 handleSocketDisconnected 中完成
 }
@@ -473,7 +485,7 @@ void ChatClient::tryReconnect()
     {
         reconnectAttempts++;
         int delay = currentReconnectDelay;
-        // 添加随机抖动，避免“惊群效应”
+        // 添加随机抖动，避免惊群效应
         delay += QRandomGenerator::global()->bounded(delay / 2); // 随机增加 0 到 delay/2 的时间
 
         qDebug() << QString("Attempting to reconnect... Attempt %1, next delay %2ms")
@@ -489,6 +501,8 @@ void ChatClient::tryReconnect()
             setConnectionState(ConnectionState::Reconnecting); // 设置为重连状态
             qDebug()<<"debug: ChatClient::tryReconnect() " << host << "" <<port;
             socket->connectToHost(host, port);
+            // 启动连接超时检测
+            connectionAttemptTimer->start(CONNECTION_ATTEMPT_TIMEOUT);
         }
         else if (currentSocketState == QAbstractSocket::ClosingState ||
                  currentSocketState == QAbstractSocket::ConnectingState)
@@ -506,7 +520,7 @@ void ChatClient::tryReconnect()
             // 此时不设置状态，等待 onSocketStateChanged 或 handleSocketDisconnected 来更新
         }
 
-        // 重新启动定时器，等待下一次尝试
+        // 无论连接尝试是否成功，都重新启动定时器
         reconnectTimer->start(delay);
     }
     else
@@ -527,7 +541,8 @@ void ChatClient::scheduleReconnect()
         // 确保 socket 状态适合调度重连，例如，不是处于 Connected 状态
         if (socket->state() != QAbstractSocket::ConnectedState) {
             resetReconnectLogic(); // 首次重连时重置参数
-            tryReconnect();        // 立即尝试第一次重连
+            // tryReconnect();        // 立即尝试第一次重连
+            reconnectTimer->start(INITIAL_RECONNECT_DELAY);
         } else {
             qDebug() << "scheduleReconnect: Socket is already Connected, not scheduling reconnect.";
         }
